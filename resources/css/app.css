@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* Polices installées en local (npm @fontsource) : servies par l'app et gardées en cache par la PWA */
+@import '@fontsource/bagel-fat-one/latin.css';
+@import '@fontsource/bagel-fat-one/latin-ext.css';
+@import '@fontsource-variable/figtree';
+
 @plugin 'tailwindcss-animate';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -12,11 +17,13 @@
     --color-brand: #e33d81;
     --color-night: #1a1a1f;
     --color-sun: #fff1bc;
+    --color-periwinkle: #7d94ec;
     /* Police arrondie des mots mis en avant (« revoir », « compte ») : classe font-display */
-    --font-display: 'Lilita One', ui-rounded, sans-serif;
+    --font-display: 'Bagel Fat One', ui-rounded, sans-serif;
 
+    /* Police du texte courant (par défaut partout) : classe font-sans */
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+        'Figtree Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
