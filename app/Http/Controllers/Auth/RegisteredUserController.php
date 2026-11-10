@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use DateTime;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,31 +14,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\NutritionTargetCalculator;
 
 class RegisteredUserController extends Controller
 {
-
-    /**Function to calculate the datas (bad english)*/
-    function protein($weight) {
-        $protein = $weight * 0.83;
-        return $protein;
-    } 
-
-    function calcium($age) {
-        $calcium = 0;
-        if($age <=9) {
-            $calcium = 900; 
-        }elseif($age >= 10 && $age <= 18) {
-            $calcium = 1200;
-        }elseif($age > 18 && $age <= 24) {
-            $calcium = 1000;
-        }else{
-            $calcium = 950;
-        }
-        return $calcium;
-    }
-
-
     /**
      * Show the registration page.
      */
@@ -73,8 +53,22 @@ class RegisteredUserController extends Controller
         ]);
 
         if(isset($validated['diet_status']) && $validated['diet_status'] === "transition") {
-            $validated['transition_started_on'] = date('d/m/Y');
+            $transition_started_on = date('d/m/Y');
         }
+        
+        $calculator = new NutritionTargetCalculator();
+
+        $targets = [
+            'protein_target_g' => $calculator->protein((float) $validated['weight_kg']),
+            'calcium_target_mg' => $calculator->calcium($validated['date_of_birth']),
+        ];
+        
+        $protein_target_g = $targets[0];
+        $iron_target_mg = 11;
+        $calcium_target_mg = $targets[1];
+        $zinc_target_mg = 11;
+        $b12_target_ug = 4;
+
 
         $user = DB::transaction(function () use ($validated) {
             $user = User::create([
@@ -85,12 +79,12 @@ class RegisteredUserController extends Controller
                 'sex' => $validated['sex'] ?? null,
                 'height_cm' => $validated['height_cm'] ?? null,
                 'diet_status' => $validated['diet_status'] ?? null,
-                'transition_started_on' => $validated['transition_started_on'] ?? null,
-                'protein_target_g' => $validated['protein_target_g'] ?? null,
-                'iron_target_mg' => $validated['iron_target_mg'] ?? null,
-                'calcium_target_mg' => $validated['calcium_target_mg'] ?? null,
-                'zinc_target_mg' => $validated['zinc_target_mg'] ?? null,
-                'b12_target_ug' => $validated['b12_target_ug'] ?? null,
+                'transition_started_on' => $transition_started_on ?? null,
+                'protein_target_g' => $protein_target_g ?? null,
+                'iron_target_mg' => $iron_target_mg ?? null,
+                'calcium_target_mg' => $calcium_target_mg ?? null,
+                'zinc_target_mg' => $zinc_target_mg ?? null,
+                'b12_target_ug' => $b12_target_ug ?? null,
                 'b12_reminder_interval_days' => $validated['b12_reminder_interval_days'] ?? null,
             ]);
 
