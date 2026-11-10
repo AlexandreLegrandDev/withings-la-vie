@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MealController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -8,7 +9,10 @@ use Inertia\Inertia;
 // Quand une page aura besoin de données, on passera à Route::get(...) + Inertia::render(page, [données]).
 Route::middleware(['auth'])->group(function () {
     Route::inertia('/', 'today')->name('today');
-    Route::inertia('repas', 'meals')->name('meals');
+    // Repas : la liste du jour, la création d'un repas au clic sur sa carte, et la page d'un repas (/repas/12)
+    Route::get('repas', [MealController::class, 'index'])->name('meals');
+    Route::post('repas', [MealController::class, 'store'])->name('meals.store');
+    Route::get('repas/{meal}', [MealController::class, 'show'])->whereNumber('meal')->name('meals.show');
     Route::inertia('suivi', 'tracking')->name('tracking');
     Route::inertia('profil', 'profile')->name('profile');
 
