@@ -1,20 +1,19 @@
-import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { LoaderCircle, Sparkle } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
+import { AuthInput, PasswordInput } from '@/components/auth-input';
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
+import { Mascot } from '@/components/mascot';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
 
-interface LoginForm {
+type LoginForm = {
     email: string;
     password: string;
     remember: boolean;
-}
+};
 
 interface LoginProps {
     status?: string;
@@ -25,7 +24,8 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({
         email: '',
         password: '',
-        remember: false,
+        // Appli mobile : on reste connecté, comme dans une appli native.
+        remember: true,
     });
 
     const submit: FormEventHandler = (e) => {
@@ -36,69 +36,73 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
-            <Head title="Log in" />
+        <AuthLayout>
+            <Head title="Connexion" />
 
-            <form className="flex flex-col gap-6" onSubmit={submit}>
-                <div className="grid gap-6">
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">Email address</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            required
-                            autoFocus
-                            tabIndex={1}
-                            autoComplete="email"
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            placeholder="email@example.com"
-                        />
-                        <InputError message={errors.email} />
-                    </div>
+            {/* Mascotte dans le cercle rose, avec deux étoiles jaunes */}
+            <div className="relative mx-auto w-[62%]">
+                <Sparkle className="absolute -top-2 left-0 size-5 fill-yellow-400 text-yellow-400" />
+                <Sparkle className="absolute top-2 -right-2 size-6 fill-yellow-400 text-yellow-400" />
+                <Mascot src="/image/tofou-login.png" color="bg-brand" />
+            </div>
 
-                    <div className="grid gap-2">
-                        <div className="flex items-center">
-                            <Label htmlFor="password">Password</Label>
-                            {canResetPassword && (
-                                <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
-                                    Forgot password?
-                                </TextLink>
-                            )}
-                        </div>
-                        <Input
-                            id="password"
-                            type="password"
-                            required
-                            tabIndex={2}
-                            autoComplete="current-password"
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                            placeholder="Password"
-                        />
-                        <InputError message={errors.password} />
-                    </div>
+            <h1 className="mt-8 text-center text-[clamp(1.6rem,7.5vw,2rem)] font-semibold tracking-tight">
+                Content de vous <span className="font-display text-brand">revoir</span>
+            </h1>
 
-                    <div className="flex items-center space-x-3">
-                        <Checkbox id="remember" name="remember" tabIndex={3} />
-                        <Label htmlFor="remember">Remember me</Label>
-                    </div>
+            {status && <p className="mt-4 text-center text-sm font-medium text-green-600">{status}</p>}
 
-                    <Button type="submit" className="mt-4 w-full" tabIndex={4} disabled={processing}>
-                        {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Log in
-                    </Button>
+            <form className="mt-10 flex flex-col" onSubmit={submit}>
+                <div className="grid gap-2">
+                    <Label htmlFor="email" className="pl-4">
+                        Email
+                    </Label>
+                    <AuthInput
+                        id="email"
+                        type="email"
+                        inputMode="email"
+                        required
+                        autoComplete="email"
+                        value={data.email}
+                        onChange={(e) => setData('email', e.target.value)}
+                        placeholder="exemple@gmail.com"
+                    />
+                    <InputError message={errors.email} className="pl-4" />
                 </div>
 
-                <div className="text-muted-foreground text-center text-sm">
-                    Don't have an account?{' '}
-                    <TextLink href={route('register')} tabIndex={5}>
-                        Sign up
-                    </TextLink>
+                <div className="mt-5 grid gap-2">
+                    <Label htmlFor="password" className="pl-4">
+                        Mot de passe
+                    </Label>
+                    <PasswordInput
+                        id="password"
+                        required
+                        autoComplete="current-password"
+                        value={data.password}
+                        onChange={(e) => setData('password', e.target.value)}
+                        placeholder="Mot de passe"
+                    />
+                    <InputError message={errors.password} className="pl-4" />
                 </div>
+
+                {canResetPassword && (
+                    <Link href={route('password.request')} className="decoration-brand mt-2 self-end pr-2 text-xs underline underline-offset-2">
+                        Mot de passe oublié ?
+                    </Link>
+                )}
+
+                <Button type="submit" disabled={processing} className="bg-night hover:bg-night/90 mt-8 h-14 w-full rounded-full text-base text-white">
+                    {processing && <LoaderCircle className="size-4 animate-spin" />}
+                    Se connecter
+                </Button>
+
+                <p className="mt-4 text-center text-xs text-neutral-600">
+                    Vous n'avez pas de compte ?{' '}
+                    <Link href={route('register')} className="text-brand font-medium">
+                        Créer un compte
+                    </Link>
+                </p>
             </form>
-
-            {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
         </AuthLayout>
     );
 }
