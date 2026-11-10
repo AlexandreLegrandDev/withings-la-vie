@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\MealController;
+use App\Http\Controllers\MealItemController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -14,6 +16,26 @@ Route::middleware(['auth'])->group(function () {
 
     // Le starter kit redirige vers « dashboard » après la connexion : on renvoie vers l'accueil.
     Route::redirect('dashboard', '/')->name('dashboard');
+
+    // Routes pour l'ajout d'un repas et d'un ingrédient dans ce repas
+    Route::post('/repas', [MealController::class, 'store'])
+    ->name('meals.store');
+
+    Route::get('/repas/{meal}', [MealController::class, 'show'])
+        ->name('meals.show');
+
+    Route::post('/repas/{meal}/ingredients', [MealItemController::class, 'store'])
+        ->name('meals.items.store');
+
+    Route::patch('/repas/{meal}/ingredients/{item}', [MealItemController::class, 'update'])
+        ->name('meals.items.update');
+
+    Route::delete('/repas/{meal}/ingredients/{item}', [MealItemController::class, 'destroy'])
+        ->name('meals.items.destroy');
+
+    Route::post('/repas/{meal}/terminer', [MealController::class, 'finish'])
+        ->name('meals.finish');
+
 });
 
 require __DIR__.'/settings.php';
