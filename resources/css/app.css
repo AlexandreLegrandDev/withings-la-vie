@@ -7,6 +7,14 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+    /* Couleurs de l'appli : utilisables en classes Tailwind (bg-brand, text-night…) */
+    /* Valeurs relevées sur les maquettes (png/img.png et png/img_1.png) */
+    --color-brand: #e33d81;
+    --color-night: #1a1a1f;
+    --color-sun: #fff1bc;
+    /* Police arrondie des mots mis en avant (« revoir », « compte ») : classe font-display */
+    --font-display: 'Lilita One', ui-rounded, sans-serif;
+
     --font-sans:
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
