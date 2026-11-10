@@ -62,15 +62,21 @@ class RegisteredUserController extends Controller
             'protein_target_g' => $calculator->protein((float) $validated['weight_kg']),
             'calcium_target_mg' => $calculator->calcium($validated['date_of_birth']),
         ];
-        
-        $protein_target_g = $targets[0];
+
+        $protein_target_g = $targets['protein_target_g'];
         $iron_target_mg = 11;
-        $calcium_target_mg = $targets[1];
+        $calcium_target_mg = $targets['calcium_target_mg'];
         $zinc_target_mg = 11;
         $b12_target_ug = 4;
 
 
-        $user = DB::transaction(function () use ($validated) {
+        $user = DB::transaction(function () use ($validated, 
+        $protein_target_g, 
+        $iron_target_mg, 
+        $calcium_target_mg,
+        $zinc_target_mg,
+        $b12_target_ug,
+        $transition_started_on) {
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
