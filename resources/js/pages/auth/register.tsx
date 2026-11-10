@@ -222,7 +222,7 @@ export default function Register() {
                                 id="weight_kg"
                                 label="Poids"
                                 min={1}
-                                max={500}
+                                max={250}
                                 step={0.1}
                                 unit="kg"
                                 value={data.weight_kg}

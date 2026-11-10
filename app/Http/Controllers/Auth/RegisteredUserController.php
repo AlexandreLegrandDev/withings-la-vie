@@ -16,6 +16,28 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
+
+    /**Function to calculate the datas (bad english)*/
+    function protein($weight) {
+        $protein = $weight * 0.83;
+        return $protein;
+    } 
+
+    function calcium($age) {
+        $calcium = 0;
+        if($age <=9) {
+            $calcium = 900; 
+        }elseif($age >= 10 && $age <= 18) {
+            $calcium = 1200;
+        }elseif($age > 18 && $age <= 24) {
+            $calcium = 1000;
+        }else{
+            $calcium = 950;
+        }
+        return $calcium;
+    }
+
+
     /**
      * Show the registration page.
      */
@@ -50,6 +72,10 @@ class RegisteredUserController extends Controller
             'weight_kg' => ['nullable', 'numeric', 'decimal:0,2', 'gt:0', 'max:9999.99'],
         ]);
 
+        if(isset($validated['diet_status']) && $validated['diet_status'] === "transition") {
+            $validated['transition_started_on'] = date('d/m/Y');
+        }
+
         $user = DB::transaction(function () use ($validated) {
             $user = User::create([
                 'name' => $validated['name'],
@@ -83,5 +109,6 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         return to_route('dashboard');
+        dd($request);
     }
 }
