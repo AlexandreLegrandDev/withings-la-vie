@@ -13,19 +13,27 @@ interface MealCardProps {
     status: MealStatus;
     /** Part des apports de la journée prévue pour ce repas, en %. */
     share: number;
-    /** Page du repas. Tant qu'elle n'existe pas, la carte est un bouton qui ne mène nulle part. */
-    href?: string;
+    /** Id du repas du jour en base, ou null s'il n'a pas encore été créé. */
+    mealId: number | null;
 }
 
-/** Nom, couleurs et décoration de chaque repas (couleurs relevées sur la maquette). */
-const meals: Record<MealType, { label: string; card: string; share: string; decoration?: () => React.JSX.Element }> = {
-    breakfast: { label: 'Petit-déjeuner', card: 'bg-[#e0f5e9]', share: 'text-[#6fa087]' },
-    lunch: { label: 'Déjeuner', card: 'bg-[#ffd9e8]', share: 'text-[#cc7499]', decoration: Plate },
-    snack: { label: 'Collation', card: 'bg-sun', share: 'text-neutral-500', decoration: Star },
-    dinner: { label: 'Dîner', card: 'bg-[#d9ecfa]', share: 'text-[#7997ac]', decoration: Cloud },
+/** Nom de chaque repas, réutilisé par la page d'un repas. */
+export const mealLabels: Record<MealType, string> = {
+    breakfast: 'Petit-déjeuner',
+    lunch: 'Déjeuner',
+    snack: 'Collation',
+    dinner: 'Dîner',
 };
 
-export function MealCard({ type, status, share, href }: MealCardProps) {
+/** Couleurs et décoration de chaque repas (couleurs relevées sur la maquette). */
+const meals: Record<MealType, { card: string; share: string; decoration?: () => React.JSX.Element }> = {
+    breakfast: { card: 'bg-[#e0f5e9]', share: 'text-[#6fa087]' },
+    lunch: { card: 'bg-[#ffd9e8]', share: 'text-[#cc7499]', decoration: Plate },
+    snack: { card: 'bg-sun', share: 'text-neutral-500', decoration: Star },
+    dinner: { card: 'bg-[#d9ecfa]', share: 'text-[#7997ac]', decoration: Cloud },
+};
+
+export function MealCard({ type, status, share, mealId }: MealCardProps) {
     const meal = meals[type];
     const Decoration = meal.decoration;
 
@@ -40,19 +48,25 @@ export function MealCard({ type, status, share, href }: MealCardProps) {
         <>
             <StatusBadge status={status} />
             {Decoration && <Decoration />}
-            <span className={cn('mt-auto text-lg leading-tight font-bold', status === 'done' && 'text-neutral-600')}>{meal.label}</span>
+            <span className={cn('mt-auto text-lg leading-tight font-bold', status === 'done' && 'text-neutral-600')}>{mealLabels[type]}</span>
             <span className={cn('text-xs', meal.share)}>{share} % du jour</span>
         </>
     );
 
-    return href ? (
-        <Link href={href} className={className}>
+    // Repas déjà en base : lien direct vers sa page (/repas/12)
+    if (mealId !== null) {
+        return (
+            <Link href={route('meals.show', mealId)} prefetch className={className}>
+                {content}
+            </Link>
+        );
+    }
+
+    // Repas pas encore créé : le clic l'enregistre (POST /repas), puis le serveur redirige vers sa page
+    return (
+        <Link href={route('meals.store')} method="post" data={{ type }} as="button" className={className}>
             {content}
         </Link>
-    ) : (
-        <button type="button" className={className}>
-            {content}
-        </button>
     );
 }
 

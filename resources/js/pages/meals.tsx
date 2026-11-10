@@ -9,7 +9,12 @@ const dayMeals: { type: MealType; share: number }[] = [
     { type: 'dinner', share: 30 },
 ];
 
-export default function Meals() {
+interface MealsProps {
+    /** Id en base du repas du jour pour chaque type, null s'il n'est pas encore créé (envoyé par MealController@index). */
+    mealIds: Record<MealType, number | null>;
+}
+
+export default function Meals({ mealIds }: MealsProps) {
     // État de chaque repas, en dur pour l'instant (comme sur la maquette).
     // À calculer plus tard, par ex. : « done » si le repas a un finished_at, « in_progress » s'il a commencé, sinon « todo ».
     const statuses: Record<MealType, MealStatus> = {
@@ -27,10 +32,10 @@ export default function Meals() {
                 <span className="font-display text-periwinkle block font-normal">mange ?</span>
             </h1>
 
-            {/* Les cartes n'ont pas encore de page : on ajoutera href={...} quand elles existeront */}
+            {/* Chaque carte ouvre la page du repas du jour (/repas/{id}), en le créant au premier clic */}
             <div className="mt-6 grid grid-cols-2 gap-3">
                 {dayMeals.map(({ type, share }) => (
-                    <MealCard key={type} type={type} share={share} status={statuses[type]} />
+                    <MealCard key={type} type={type} share={share} status={statuses[type]} mealId={mealIds[type]} />
                 ))}
             </div>
 
