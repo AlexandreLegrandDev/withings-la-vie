@@ -1,11 +1,13 @@
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';
+import { configureEcho } from '@laravel/echo-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import type { ComponentType, ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { route as routeFn } from 'ziggy-js';
 import { initializeTheme } from './hooks/use-appearance';
-import { configureEcho } from '@laravel/echo-react';
+import NavLayout from './layouts/nav-layout';
 
 configureEcho({
     broadcaster: 'reverb',
@@ -17,9 +19,18 @@ declare global {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+type PageModule = { default: ComponentType & { layout?: (page: ReactNode) => ReactNode } };
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
+    resolve: async (name) => {
+        const page = await resolvePageComponent<PageModule>(`./pages/${name}.tsx`, import.meta.glob<PageModule>('./pages/**/*.tsx'));
+        // Toutes les pages sauf connexion/inscription reçoivent le menu en layout persistant (voir layouts/nav-layout.tsx).
+        if (!name.startsWith('auth/')) {
+            page.default.layout ??= (content) => <NavLayout>{content}</NavLayout>;
+        }
+        return page;
+    },
     setup({ el, App, props }) {
         const root = createRoot(el);
 

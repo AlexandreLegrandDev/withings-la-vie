@@ -33,7 +33,8 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            // Pas de champ « confirmer le mot de passe » sur la maquette : l'œil permet de vérifier ce qu'on tape.
+            'password' => ['required', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
