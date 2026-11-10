@@ -7,6 +7,15 @@
         {{-- Couleur de la barre du navigateur mobile --}}
         <meta name="theme-color" content="#ffffff">
 
+        {{-- PWA : manifest (généré par vite-plugin-pwa au build) et icônes --}}
+        <link rel="manifest" href="/build/manifest.webmanifest">
+        <link rel="icon" href="/favicon.ico" sizes="48x48">
+        <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="Withings la vie">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
