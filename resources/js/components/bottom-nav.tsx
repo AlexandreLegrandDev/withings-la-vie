@@ -1,35 +1,12 @@
+import { navLinks as links, navIndexOf } from '@/lib/nav-links';
 import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
-import { ChartNoAxesColumn, CircleDot, House, User, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
-interface NavLink {
-    label: string;
-    href: string;
-    icon: LucideIcon;
-    /** Autres débuts d'URL qui allument aussi ce bouton (ex. les réglages pour Profil). */
-    also?: string[];
-}
-
-// Les URLs correspondent aux routes déclarées dans routes/web.php.
-const links: NavLink[] = [
-    { label: "Aujourd'hui", href: '/', icon: House },
-    { label: 'Repas', href: '/repas', icon: CircleDot },
-    { label: 'Suivi', href: '/suivi', icon: ChartNoAxesColumn },
-    { label: 'Profil', href: '/profil', icon: User, also: ['/settings'] },
-];
-
-/** Vrai si l'URL actuelle correspond au lien (exacte pour l'accueil, par préfixe pour les autres). */
-function isActive(currentUrl: string, { href, also = [] }: NavLink) {
-    const path = currentUrl.split('?')[0];
-    if (href === '/') return path === '/';
-    return [href, ...also].some((prefix) => path.startsWith(prefix));
-}
 
 export function BottomNav() {
     // usePage().url : l'URL de la page affichée, fournie par Inertia.
     const { url } = usePage();
-    const currentIndex = links.findIndex((link) => isActive(url, link));
+    const currentIndex = navIndexOf(url);
 
     // Bouton cliqué dont la page est en cours de chargement : la bulle part dessus tout de suite, sans attendre la réponse du serveur.
     const [clickedIndex, setClickedIndex] = useState<number | null>(null);
