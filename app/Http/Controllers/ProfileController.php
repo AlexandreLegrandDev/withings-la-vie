@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -12,11 +13,25 @@ class ProfileController extends Controller
 {
     public function connectKitchenScale(Request $request): RedirectResponse
     {
+        return $this->setKitchenScaleConnection($request, true);
+    }
+
+    public function disconnectKitchenScale(Request $request): RedirectResponse
+    {
+        return $this->setKitchenScaleConnection($request, false);
+    }
+
+    private function setKitchenScaleConnection(Request $request, bool $connected): RedirectResponse
+    {
+        $validated = $request->validate([
+            'return_to' => ['sometimes', Rule::in(['profile', 'meals'])],
+        ]);
+
         $user = $request->user();
-        $user->kitchen_scale_connected = true;
+        $user->kitchen_scale_connected = $connected;
         $user->save();
 
-        return to_route('profile');
+        return to_route($validated['return_to'] ?? 'profile');
     }
 
     public function storeWeight(Request $request): RedirectResponse

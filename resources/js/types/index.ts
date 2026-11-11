@@ -72,6 +72,7 @@ export interface Food {
 }
 
 export interface User {
+    kitchen_scale_connected: boolean;
     id: number;
     name: string;
     email: string;

@@ -25,6 +25,7 @@ class MealController extends Controller
             ->keyBy('type');
 
         return Inertia::render('meals', [
+            'kitchenScaleConnected' => $request->user()->kitchen_scale_connected,
             // Ex. { breakfast: 12, lunch: null, snack: null, dinner: null }
             'mealIds' => collect(Meal::TYPES)->mapWithKeys(fn ($type) => [$type => $meals->get($type)?->id]),
             'mealDates' => collect(Meal::TYPES)->mapWithKeys(fn ($type) => [

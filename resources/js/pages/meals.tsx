@@ -1,3 +1,4 @@
+import { KitchenScale } from '@/components/kitchen-scale';
 import { MealCard, type MealStatus, type MealType } from '@/components/meal-card';
 import MobileLayout from '@/layouts/mobile-layout';
 
@@ -42,13 +43,8 @@ export default function Meals({ mealIds, mealDates }: MealsProps) {
                 ))}
             </div>
 
-            {/* Balance : affichage en dur, non cliquable pour l'instant */}
-            <section className="mt-5 flex items-center gap-3 rounded-2xl bg-[#f4f4f6] px-4 py-3.5">
-                <span aria-hidden className="size-2.5 shrink-0 rounded-full bg-[#5dc28c] ring-4 ring-[#5dc28c]/20" />
-                <div>
-                    <p className="text-sm font-semibold">Balance Withings connectée</p>
-                    <p className="text-xs text-neutral-500">Prête à peser ton premier aliment</p>
-                </div>
+            <section className="mt-5" aria-label="Balance de cuisine">
+                <KitchenScale returnTo="meals" />
             </section>
         </MobileLayout>
     );

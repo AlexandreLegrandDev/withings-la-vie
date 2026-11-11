@@ -1,7 +1,9 @@
 import { BottomNav } from '@/components/bottom-nav';
+import { KitchenScaleProvider } from '@/components/kitchen-scale-provider';
 import { useSwipeNavigation } from '@/hooks/use-swipe-navigation';
 import { navIndexOf } from '@/lib/nav-links';
 import { cn } from '@/lib/utils';
+import type { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { useRef, type ReactNode } from 'react';
 
@@ -11,7 +13,10 @@ import { useRef, type ReactNode } from 'react';
  * Il est appliqué automatiquement à toutes les pages dans app.tsx (sauf les pages auth/).
  */
 export default function NavLayout({ children }: { children: ReactNode }) {
-    const { url } = usePage();
+    const {
+        url,
+        props: { auth },
+    } = usePage<SharedData>();
     useSwipeNavigation(url);
 
     // Sens de l'animation : la nouvelle page arrive par la droite si elle est après l'ancienne dans le menu, sinon par la gauche.
@@ -26,20 +31,22 @@ export default function NavLayout({ children }: { children: ReactNode }) {
 
     return (
         // overflow-x-clip : la page qui glisse ne crée pas de barre de défilement horizontale
-        <div className="overflow-x-clip">
-            {/* key={url} : à chaque page, ce bloc est recréé et rejoue son animation d'entrée.
+        <KitchenScaleProvider key={auth.user.id} initialConnected={auth.user.kitchen_scale_connected}>
+            <div className="overflow-x-clip">
+                {/* key={url} : à chaque page, ce bloc est recréé et rejoue son animation d'entrée.
                 motion-reduce : pas d'animation si le téléphone demande moins de mouvements. */}
-            <div
-                key={url}
-                className={cn(
-                    direction !== 0 && 'animate-in fade-in duration-300 ease-out motion-reduce:animate-none',
-                    direction > 0 && 'slide-in-from-right-12',
-                    direction < 0 && 'slide-in-from-left-12',
-                )}
-            >
-                {children}
+                <div
+                    key={url}
+                    className={cn(
+                        direction !== 0 && 'animate-in fade-in duration-300 ease-out motion-reduce:animate-none',
+                        direction > 0 && 'slide-in-from-right-12',
+                        direction < 0 && 'slide-in-from-left-12',
+                    )}
+                >
+                    {children}
+                </div>
+                <BottomNav />
             </div>
-            <BottomNav />
-        </div>
+        </KitchenScaleProvider>
     );
 }
