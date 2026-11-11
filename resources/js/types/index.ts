@@ -47,6 +47,30 @@ export interface Intake {
     missing: string[];
 }
 
+/**
+ * Aliment proposé pour combler les manques d'un repas.
+ * Format prévu pour l'API des aliments : le serveur renvoie une liste vide en attendant.
+ */
+export interface FoodSuggestion {
+    name: string;
+    /** Poids conseillé, en grammes. */
+    weight_g: number;
+    /** Ce que l'aliment apporte, déjà rédigé : « +15 g prot. · +200 mg Ca ». */
+    benefits: string;
+    /** Badge rose à côté du nom (ex. « La Vie »), facultatif. */
+    badge?: string;
+}
+
+/** Aliment du catalogue (page « Choisir un aliment »). Viendra de l'API des aliments. */
+export interface Food {
+    name: string;
+    /** Rayon du filtre : produits La Vie ou aliments de base. */
+    category: 'la_vie' | 'base';
+    /** Apports pour 100 g, déjà rédigés : « 15 g prot. · 3 mg fer /100 g ». */
+    nutrients: string;
+    badge?: string;
+}
+
 export interface User {
     id: number;
     name: string;

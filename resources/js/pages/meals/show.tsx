@@ -1,35 +1,16 @@
-import { AuthInput } from '@/components/auth-input';
-import InputError from '@/components/input-error';
 import { mealLabels, type MealType } from '@/components/meal-card';
 import { ProgressRing } from '@/components/progress-ring';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import MobileLayout from '@/layouts/mobile-layout';
-import type { Intake, NutrientIntake } from '@/types';
-import { Link, router, useForm } from '@inertiajs/react';
-import { Check, ChevronLeft, Leaf, LoaderCircle, Plus, X } from 'lucide-react';
-import { useState, type FormEventHandler } from 'react';
+import type { FoodSuggestion, Intake, NutrientIntake } from '@/types';
+import { Link, router } from '@inertiajs/react';
+import { Check, ChevronLeft, Leaf, Plus, X } from 'lucide-react';
+import { useState } from 'react';
 
 interface MealItem {
     id: number;
     food_name: string;
     /** Poids en grammes (décimal envoyé en texte par Laravel, ex. « 150.00 »). */
     weight_g: string;
-}
-
-/**
- * Aliment proposé pour combler les manques du repas.
- * Format prévu pour l'API des aliments : MealController@show renvoie une liste vide en attendant.
- */
-export interface FoodSuggestion {
-    name: string;
-    /** Poids conseillé, en grammes. */
-    weight_g: number;
-    /** Ce que l'aliment apporte, déjà rédigé : « +15 g prot. · +200 mg Ca ». */
-    benefits: string;
-    /** Badge rose à côté du nom (ex. une marque partenaire), facultatif. */
-    badge?: string;
 }
 
 interface MealShowProps {
@@ -127,7 +108,15 @@ export default function MealShow({ meal, intake, items, suggestions }: MealShowP
                 )}
             </section>
 
-            {!finished && <AddFoodDialog mealId={meal.id} />}
+            {!finished && (
+                <Link
+                    href={route('meals.items.create', meal.id)}
+                    className="bg-night mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-medium text-white"
+                >
+                    <Plus className="size-4" />
+                    Ajouter un aliment
+                </Link>
+            )}
         </MobileLayout>
     );
 }
@@ -213,90 +202,5 @@ function PlateItem({ mealId, item, canRemove }: { mealId: number; item: MealItem
                 </button>
             )}
         </li>
-    );
-}
-
-/** Bouton « Ajouter un aliment » et sa fenêtre : nom + poids (saisis à la main tant que la balance n'est pas branchée). */
-function AddFoodDialog({ mealId }: { mealId: number }) {
-    const [open, setOpen] = useState(false);
-    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({ food_name: '', weight_g: '' });
-
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
-        post(route('meals.items.store', mealId), {
-            preserveScroll: true,
-            onSuccess: () => {
-                reset();
-                setOpen(false);
-            },
-        });
-    };
-
-    return (
-        <Dialog
-            open={open}
-            onOpenChange={(value) => {
-                setOpen(value);
-                if (!value) clearErrors();
-            }}
-        >
-            <DialogTrigger asChild>
-                <Button className="bg-night hover:bg-night/90 mt-6 h-14 w-full rounded-full text-base text-white">
-                    <Plus className="size-4" />
-                    Ajouter un aliment
-                </Button>
-            </DialogTrigger>
-
-            {/* Fenêtre qui monte du bas de l'écran, comme une feuille d'appli mobile */}
-            <DialogContent className="top-auto bottom-0 max-w-md translate-y-0 gap-0 rounded-t-3xl rounded-b-none border-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-                <DialogTitle className="text-xl font-bold">Ajouter un aliment</DialogTitle>
-                <DialogDescription className="mt-1 text-sm text-neutral-500">Indique ce que tu ajoutes dans ton assiette.</DialogDescription>
-
-                <form onSubmit={submit} className="mt-5 flex flex-col gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="food_name" className="pl-4">
-                            Aliment
-                        </Label>
-                        <AuthInput
-                            id="food_name"
-                            required
-                            maxLength={100}
-                            value={data.food_name}
-                            onChange={(e) => setData('food_name', e.target.value)}
-                            placeholder="Lentilles cuites"
-                        />
-                        <InputError message={errors.food_name} className="pl-4" />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="weight_g" className="pl-4">
-                            Poids (g)
-                        </Label>
-                        <AuthInput
-                            id="weight_g"
-                            type="number"
-                            inputMode="decimal"
-                            min="1"
-                            max="5000"
-                            step="any"
-                            required
-                            value={data.weight_g}
-                            onChange={(e) => setData('weight_g', e.target.value)}
-                            placeholder="150"
-                        />
-                        <InputError message={errors.weight_g} className="pl-4" />
-                    </div>
-
-                    <Button
-                        type="submit"
-                        disabled={processing}
-                        className="bg-brand hover:bg-brand/90 mt-2 h-14 w-full rounded-full text-base text-white"
-                    >
-                        {processing && <LoaderCircle className="size-4 animate-spin" />}
-                        Ajouter
-                    </Button>
-                </form>
-            </DialogContent>
-        </Dialog>
     );
 }

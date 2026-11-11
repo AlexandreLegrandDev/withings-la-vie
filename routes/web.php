@@ -28,6 +28,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/repas/{meal}', [MealController::class, 'show'])
         ->name('meals.show');
 
+    // Page « Choisir un aliment »
+    Route::get('/repas/{meal}/ingredients/ajouter', [MealItemController::class, 'create'])
+        ->name('meals.items.create');
+
     Route::post('/repas/{meal}/ingredients', [MealItemController::class, 'store'])
         ->name('meals.items.store');
 

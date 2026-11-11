@@ -6,6 +6,8 @@ use App\Models\Meal;
 use App\Models\MealItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Aliments d'un repas (« Dans l'assiette »).
@@ -15,6 +17,19 @@ use Illuminate\Http\Request;
  */
 class MealItemController extends Controller
 {
+    /** Page « Choisir un aliment » pour ce repas. */
+    public function create(Request $request, Meal $meal): Response
+    {
+        abort_unless($meal->user_id === $request->user()->id, 404);
+
+        return Inertia::render('meals/add-food', [
+            'meal' => ['id' => $meal->id, 'type' => $meal->type],
+            // Viendront de l'API des aliments : listes vides en attendant
+            'suggestions' => [],
+            'foods' => [],
+        ]);
+    }
+
     public function store(Request $request, Meal $meal): RedirectResponse
     {
         abort_unless($meal->user_id === $request->user()->id, 404);
@@ -28,7 +43,8 @@ class MealItemController extends Controller
         // Le repas « bouge » : il redevient le repas en cours affiché sur l'accueil
         $meal->touch();
 
-        return back();
+        // Retour sur la page du repas, où l'aliment apparaît dans « Dans l'assiette »
+        return to_route('meals.show', $meal);
     }
 
     public function update(Request $request, Meal $meal, MealItem $item): RedirectResponse

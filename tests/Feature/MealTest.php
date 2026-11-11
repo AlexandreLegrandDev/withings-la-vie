@@ -71,12 +71,27 @@ class MealTest extends TestCase
         );
     }
 
+    public function test_add_food_page_is_only_for_the_meal_owner()
+    {
+        $user = User::factory()->create();
+        $meal = $user->meals()->create(['meal_date' => '2026-11-10', 'type' => 'lunch']);
+
+        $this->actingAs($user)->get("/repas/{$meal->id}/ingredients/ajouter")->assertInertia(fn (Assert $page) => $page
+            ->component('meals/add-food')
+            ->where('meal.id', $meal->id)
+            ->where('foods', [])
+        );
+
+        $this->actingAs(User::factory()->create())->get("/repas/{$meal->id}/ingredients/ajouter")->assertNotFound();
+    }
+
     public function test_foods_can_be_added_and_removed()
     {
         $user = User::factory()->create();
         $meal = $user->meals()->create(['meal_date' => '2026-11-10', 'type' => 'lunch']);
 
-        $this->actingAs($user)->post("/repas/{$meal->id}/ingredients", ['food_name' => 'Tofu', 'weight_g' => 100])->assertRedirect();
+        $this->actingAs($user)->post("/repas/{$meal->id}/ingredients", ['food_name' => 'Tofu', 'weight_g' => 100])
+            ->assertRedirect("/repas/{$meal->id}");
         $item = $meal->items()->sole();
         $this->assertSame('Tofu', $item->food_name);
 
