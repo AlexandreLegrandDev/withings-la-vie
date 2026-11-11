@@ -79,10 +79,33 @@ class MealTest extends TestCase
         $this->actingAs($user)->get("/repas/{$meal->id}/ingredients/ajouter")->assertInertia(fn (Assert $page) => $page
             ->component('meals/add-food')
             ->where('meal.id', $meal->id)
-            ->where('foods', [])
+            ->has('foods', count(json_decode(file_get_contents(resource_path('data/catalogue-aliments.json')), true, 512, JSON_THROW_ON_ERROR)))
+            ->where('foods.0.key', 'la-vie-lardons')
+            ->where('foods.0.name', 'Lardons végétaux')
+            ->where('foods.0.category', 'la_vie')
+            ->where('foods.0.badge', 'La Vie')
         );
 
         $this->actingAs(User::factory()->create())->get("/repas/{$meal->id}/ingredients/ajouter")->assertNotFound();
+    }
+
+    public function test_catalogue_ingredients_with_long_names_can_be_added_without_calculating_nutrients(): void
+    {
+        $catalogue = json_decode(file_get_contents(resource_path('data/catalogue-aliments.json')), true, 512, JSON_THROW_ON_ERROR);
+        $food = collect($catalogue)->first(fn ($entry) => mb_strlen($entry['name']) > 100);
+        $this->assertNotNull($food);
+        $user = User::factory()->create();
+        $meal = $user->meals()->create(['meal_date' => '2026-11-11', 'type' => 'lunch']);
+
+        $this->actingAs($user)->post("/repas/{$meal->id}/ingredients", [
+            'food_name' => $food['name'], 'weight_g' => 150,
+        ])->assertSessionHasNoErrors()->assertRedirect("/repas/{$meal->id}");
+
+        $this->assertDatabaseHas('meal_items', [
+            'meal_id' => $meal->id, 'food_name' => $food['name'], 'weight_g' => 150,
+            'protein_total_g' => null, 'iron_total_mg' => null,
+            'calcium_total_mg' => null, 'zinc_total_mg' => null, 'b12_total_ug' => null,
+        ]);
     }
 
     public function test_foods_can_be_added_and_removed()

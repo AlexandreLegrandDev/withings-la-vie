@@ -22,11 +22,20 @@ class MealItemController extends Controller
     {
         abort_unless($meal->user_id === $request->user()->id, 404);
 
+        $catalogue = json_decode(file_get_contents(resource_path('data/catalogue-aliments.json')), true, 512, JSON_THROW_ON_ERROR);
+        $foods = collect($catalogue)->map(fn (array $food, string $key) => [
+            'key' => $key,
+            'name' => $food['name'],
+            'category' => ($food['brand'] ?? null) === 'La Vie' ? 'la_vie' : 'base',
+            'badge' => $food['brand'] ?? null,
+            'nutrients' => '',
+        ])->values();
+
         return Inertia::render('meals/add-food', [
             'meal' => ['id' => $meal->id, 'type' => $meal->type],
-            // Viendront de l'API des aliments : listes vides en attendant
+            // Les suggestions et calculs nutritionnels seront ajoutés ensuite.
             'suggestions' => [],
-            'foods' => [],
+            'foods' => $foods,
         ]);
     }
 
@@ -35,7 +44,7 @@ class MealItemController extends Controller
         abort_unless($meal->user_id === $request->user()->id, 404);
 
         $validated = $request->validate([
-            'food_name' => ['required', 'string', 'max:100'],
+            'food_name' => ['required', 'string', 'max:255'],
             'weight_g' => ['required', 'numeric', 'gt:0', 'max:5000'],
         ]);
 

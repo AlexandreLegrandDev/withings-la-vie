@@ -61,14 +61,15 @@ export interface FoodSuggestion {
     badge?: string;
 }
 
-/** Aliment du catalogue (page « Choisir un aliment »). Viendra de l'API des aliments. */
+/** Aliment du catalogue JSON (page « Choisir un aliment »). */
 export interface Food {
+    key: string;
     name: string;
     /** Rayon du filtre : produits La Vie ou aliments de base. */
     category: 'la_vie' | 'base';
     /** Apports pour 100 g, déjà rédigés : « 15 g prot. · 3 mg fer /100 g ». */
     nutrients: string;
-    badge?: string;
+    badge?: string | null;
 }
 
 export interface User {
