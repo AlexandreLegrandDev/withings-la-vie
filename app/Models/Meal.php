@@ -10,6 +10,9 @@ class Meal extends Model
 {
     public const TYPES = ['breakfast', 'lunch', 'snack', 'dinner'];
 
+    /** Part des besoins du jour prévue pour chaque repas, en % (affichée sur les cartes de la page Repas). */
+    public const SHARES = ['breakfast' => 25, 'lunch' => 35, 'snack' => 10, 'dinner' => 30];
+
     protected $fillable = [
         'user_id', 'meal_date', 'type', 'finished_at',
         'protein_total_g', 'iron_total_mg', 'calcium_total_mg',

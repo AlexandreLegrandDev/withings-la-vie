@@ -28,6 +28,25 @@ export interface SharedData {
     [key: string]: unknown;
 }
 
+/** Un nutriment suivi, comparé au besoin (envoyé par app/Services/DailyIntake.php). */
+export interface NutrientIntake {
+    key: 'protein' | 'iron' | 'b12' | 'calcium' | 'zinc';
+    label: string;
+    unit: string;
+    eaten: number;
+    target: number;
+    /** Part du besoin déjà couverte, de 0 à 100. */
+    percent: number;
+}
+
+/** Bilan d'une journée ou d'un repas (app/Services/DailyIntake.php). */
+export interface Intake {
+    percent: number;
+    nutrients: NutrientIntake[];
+    /** Les nutriments les plus en retard, déjà avec leur article : ["du fer", "de la B12"]. */
+    missing: string[];
+}
+
 export interface User {
     id: number;
     name: string;

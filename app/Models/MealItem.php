@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MealItem extends Model
 {
-    protected $fillable = ['meal_id', 'food_key', 'weight_g'];
+    protected $fillable = ['meal_id', 'food_name', 'weight_g'];
 
     protected function casts(): array
     {

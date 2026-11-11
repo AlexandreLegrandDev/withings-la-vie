@@ -1,29 +1,15 @@
 import { mealLabels, type MealType } from '@/components/meal-card';
+import { ProgressRing } from '@/components/progress-ring';
 import MobileLayout from '@/layouts/mobile-layout';
-import type { SharedData } from '@/types';
+import type { Intake, NutrientIntake, SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
-
-interface Nutrient {
-    key: string;
-    label: string;
-    unit: string;
-    eaten: number;
-    target: number;
-    /** Part du besoin déjà couverte, de 0 à 100. */
-    percent: number;
-}
 
 interface TodayProps {
     /** Jour affiché, au format AAAA-MM-JJ. */
     date: string;
     /** Bilan du jour calculé par app/Services/DailyIntake.php. */
-    intake: {
-        percent: number;
-        nutrients: Nutrient[];
-        /** Les nutriments les plus en retard, déjà avec leur article : ["du fer", "de la B12"]. */
-        missing: string[];
-    };
+    intake: Intake;
     /** Repas du jour commencé et pas encore terminé, ou null. */
     currentMeal: { id: number; type: MealType; items_count: number } | null;
 }
@@ -114,7 +100,11 @@ function DayCard({ percent, missing }: { percent: number; missing: string[] }) {
             {/* Rond décoratif en bas à droite, comme sur la maquette */}
             <span aria-hidden className="absolute -right-6 -bottom-10 size-28 rounded-full bg-[#ffc2da]" />
 
-            <ProgressRing percent={percent} />
+            {/* Taille du rond : suit la hauteur de l'écran, entre 80 et 112 px */}
+            <ProgressRing percent={percent} className="size-[clamp(5rem,13vh,7rem)]" label={`${percent} % des besoins du jour`}>
+                <span className="text-[clamp(1.25rem,3.4vh,1.5rem)] leading-none font-semibold">{percent}%</span>
+                <span className="mt-0.5 text-[0.65rem] text-neutral-500">du jour</span>
+            </ProgressRing>
 
             <div className="relative min-w-0">
                 <p className="text-[0.7rem] font-medium tracking-widest text-[#cc7499] uppercase">Ta journée</p>
@@ -125,37 +115,7 @@ function DayCard({ percent, missing }: { percent: number; missing: string[] }) {
     );
 }
 
-/** Anneau de progression en SVG (le trait rose fait percent % du tour). */
-function ProgressRing({ percent }: { percent: number }) {
-    const radius = 42;
-    const circumference = 2 * Math.PI * radius;
-
-    return (
-        // Taille du rond : suit la hauteur de l'écran, entre 80 et 112 px
-        <div className="relative size-[clamp(5rem,13vh,7rem)] shrink-0" role="img" aria-label={`${percent} % des besoins du jour`}>
-            <svg viewBox="0 0 100 100" className="size-full -rotate-90">
-                <circle cx="50" cy="50" r={radius} fill="white" stroke="white" strokeWidth="10" />
-                <circle
-                    cx="50"
-                    cy="50"
-                    r={radius}
-                    fill="none"
-                    stroke="var(--color-brand)"
-                    strokeWidth="10"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={circumference * (1 - percent / 100)}
-                    className="transition-[stroke-dashoffset] duration-700"
-                />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-[clamp(1.25rem,3.4vh,1.5rem)] leading-none font-semibold">{percent}%</span>
-                <span className="mt-0.5 text-[0.65rem] text-neutral-500">du jour</span>
-            </div>
-        </div>
-    );
-}
-
-function NutrientBar({ nutrient }: { nutrient: Nutrient }) {
+function NutrientBar({ nutrient }: { nutrient: NutrientIntake }) {
     return (
         <li>
             <div className="flex items-baseline justify-between text-sm">

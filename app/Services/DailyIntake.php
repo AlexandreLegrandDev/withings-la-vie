@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Meal;
 use App\Models\User;
 
 /**
@@ -39,9 +40,29 @@ class DailyIntake
             ->selectRaw(collect(self::NUTRIENTS)->map(fn ($n) => "COALESCE(SUM({$n[1]}), 0) as {$n[1]}")->join(', '))
             ->first();
 
+        return $this->compare($totals, $user);
+    }
+
+    /**
+     * Bilan d'un seul repas, comparé à sa part des besoins du jour (ex. déjeuner = 35 % des besoins).
+     *
+     * @return array{percent: int, nutrients: list<array<string, mixed>>, missing: list<string>}
+     */
+    public function forMeal(Meal $meal): array
+    {
+        return $this->compare($meal, $meal->user, Meal::SHARES[$meal->type] / 100);
+    }
+
+    /**
+     * Compare des totaux (colonnes *_total) aux besoins de l'utilisateur, multipliés par $factor.
+     *
+     * @return array{percent: int, nutrients: list<array<string, mixed>>, missing: list<string>}
+     */
+    private function compare(object $totals, User $user, float $factor = 1.0): array
+    {
         $nutrients = [];
         foreach (self::NUTRIENTS as $key => [$label, $totalColumn, $targetColumn, $unit]) {
-            $target = (float) $user->{$targetColumn};
+            $target = (float) $user->{$targetColumn} * $factor;
 
             // Pas de besoin calculé (ex. calcium pour un mineur) : on n'affiche pas ce nutriment
             if ($target <= 0) {

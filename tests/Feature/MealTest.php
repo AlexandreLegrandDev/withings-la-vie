@@ -52,6 +52,64 @@ class MealTest extends TestCase
         $this->assertSame(0, Meal::count());
     }
 
+    public function test_meal_page_compares_meal_totals_to_its_share_of_the_day()
+    {
+        $user = User::factory()->create(['protein_target_g' => 100, 'iron_target_mg' => 10]);
+        // Déjeuner = 35 % du jour → objectifs du repas : 35 g de protéines, 3,5 mg de fer
+        $meal = $user->meals()->create(['meal_date' => '2026-11-10', 'type' => 'lunch', 'protein_total_g' => 21, 'iron_total_mg' => 3.5]);
+        $meal->items()->create(['food_name' => 'Lentilles cuites', 'weight_g' => 150]);
+
+        $this->actingAs($user)->get("/repas/{$meal->id}")->assertInertia(fn (Assert $page) => $page
+            ->component('meals/show')
+            ->where('meal.share', 35)
+            ->has('intake.nutrients', 2)
+            ->where('intake.nutrients.0.percent', 60)
+            ->where('intake.nutrients.1.percent', 100)
+            ->where('intake.missing', ['des protéines'])
+            ->where('items.0.food_name', 'Lentilles cuites')
+            ->where('suggestions', [])
+        );
+    }
+
+    public function test_foods_can_be_added_and_removed()
+    {
+        $user = User::factory()->create();
+        $meal = $user->meals()->create(['meal_date' => '2026-11-10', 'type' => 'lunch']);
+
+        $this->actingAs($user)->post("/repas/{$meal->id}/ingredients", ['food_name' => 'Tofu', 'weight_g' => 100])->assertRedirect();
+        $item = $meal->items()->sole();
+        $this->assertSame('Tofu', $item->food_name);
+
+        $this->delete("/repas/{$meal->id}/ingredients/{$item->id}")->assertRedirect();
+        $this->assertSame(0, $meal->items()->count());
+    }
+
+    public function test_food_needs_a_name_and_a_positive_weight()
+    {
+        $user = User::factory()->create();
+        $meal = $user->meals()->create(['meal_date' => '2026-11-10', 'type' => 'lunch']);
+
+        $this->actingAs($user)->post("/repas/{$meal->id}/ingredients", ['food_name' => '', 'weight_g' => 0])
+            ->assertSessionHasErrors(['food_name', 'weight_g']);
+    }
+
+    public function test_users_cannot_add_food_to_someone_elses_meal()
+    {
+        $meal = User::factory()->create()->meals()->create(['meal_date' => '2026-11-10', 'type' => 'lunch']);
+
+        $this->actingAs(User::factory()->create())->post("/repas/{$meal->id}/ingredients", ['food_name' => 'Tofu', 'weight_g' => 100])
+            ->assertNotFound();
+    }
+
+    public function test_finishing_a_meal()
+    {
+        $user = User::factory()->create();
+        $meal = $user->meals()->create(['meal_date' => '2026-11-10', 'type' => 'lunch']);
+
+        $this->actingAs($user)->post("/repas/{$meal->id}/terminer")->assertRedirect('/repas');
+        $this->assertNotNull($meal->fresh()->finished_at);
+    }
+
     public function test_users_cannot_see_someone_elses_meal()
     {
         $meal = User::factory()->create()->meals()->create(['meal_date' => '2026-11-10', 'type' => 'lunch']);
