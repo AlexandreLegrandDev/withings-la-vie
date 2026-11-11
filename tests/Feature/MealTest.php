@@ -57,7 +57,7 @@ class MealTest extends TestCase
         $user = User::factory()->create(['protein_target_g' => 100, 'iron_target_mg' => 10]);
         // Déjeuner = 35 % du jour → objectifs du repas : 35 g de protéines, 3,5 mg de fer
         $meal = $user->meals()->create(['meal_date' => '2026-11-10', 'type' => 'lunch', 'protein_total_g' => 21, 'iron_total_mg' => 3.5]);
-        $meal->items()->create(['food_name' => 'Lentilles cuites', 'weight_g' => 150]);
+        $meal->items()->create(['food_name' => 'Lentilles cuites', 'weight_g' => 150, 'protein_total_g' => 21, 'iron_total_mg' => 3.5]);
 
         $this->actingAs($user)->get("/repas/{$meal->id}")->assertInertia(fn (Assert $page) => $page
             ->component('meals/show')

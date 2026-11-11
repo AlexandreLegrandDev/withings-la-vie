@@ -14,6 +14,8 @@ use App\Models\User;
  */
 class DailyIntake
 {
+    public function __construct(private MealNutrientCalculator $mealCalculator) {}
+
     /**
      * Les nutriments suivis, dans l'ordre d'affichage.
      * clé => [libellé, colonne du total dans meals, colonne du besoin dans users, unité, article pour « il te manque … »]
@@ -50,7 +52,12 @@ class DailyIntake
      */
     public function forMeal(Meal $meal): array
     {
-        return $this->compare($meal, $meal->user, Meal::SHARES[$meal->type] / 100);
+        $summary = $this->mealCalculator->calculate($meal);
+
+        return [
+            ...$this->compare((object) $summary['totals'], $meal->user, Meal::SHARES[$meal->type] / 100),
+            'hasUnknownNutrients' => $summary['hasUnknownNutrients'],
+        ];
     }
 
     /**

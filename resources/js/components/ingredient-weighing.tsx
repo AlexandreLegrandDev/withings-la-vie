@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useKitchenScale } from '@/contexts/kitchen-scale-context';
 import type { Food } from '@/types';
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { useRef } from 'react';
 
@@ -50,7 +50,7 @@ export function IngredientWeighing({
                     onSubmit={(event) => {
                         event.preventDefault();
                         if (processing || !connected) return;
-                        post(route('meals.items.store', mealId));
+                        post(route('meals.items.store', mealId), { onSuccess: () => router.flushAll() });
                     }}
                 >
                     <div className="mr-12 flex items-center gap-2 self-start rounded-full bg-[#d0f0e0] px-4 py-2 text-xs font-medium text-[#287354]">

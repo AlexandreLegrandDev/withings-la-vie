@@ -29,7 +29,7 @@ class MealItemNutritionTest extends TestCase
         $this->assertSame('1.372', $item->zinc_total_mg);
         $this->assertSame('60.760', $item->calcium_total_mg);
         $this->assertSame('0.019', $item->b12_total_ug);
-        $this->assertSame('12.000', $meal->fresh()->protein_total_g);
+        $this->assertSame('14.602', $meal->fresh()->protein_total_g);
     }
 
     public function test_unknown_nutrients_remain_null_when_an_item_is_added(): void

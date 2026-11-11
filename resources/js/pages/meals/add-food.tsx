@@ -8,7 +8,7 @@ import { useKitchenScale } from '@/contexts/kitchen-scale-context';
 import MobileLayout from '@/layouts/mobile-layout';
 import { cn } from '@/lib/utils';
 import type { Food, FoodSuggestion } from '@/types';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, LoaderCircle, Plus, ScanLine, Search, X } from 'lucide-react';
 import { useState, type FormEventHandler } from 'react';
 
@@ -234,7 +234,7 @@ function WeightForm({ mealId, foodName, food, onCancel }: { mealId: number; food
         e.preventDefault();
         if (processing) return;
         // Le serveur renvoie ensuite sur la page du repas
-        post(route('meals.items.store', mealId));
+        post(route('meals.items.store', mealId), { onSuccess: () => router.flushAll() });
     };
 
     return (

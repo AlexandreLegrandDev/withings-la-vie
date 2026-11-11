@@ -93,6 +93,12 @@ export default function MealShow({ meal, intake, items, suggestions }: MealShowP
                 ))}
             </ul>
 
+            {intake.hasUnknownNutrients && (
+                <p className="mt-2 text-xs leading-relaxed text-neutral-500">
+                    Certains apports sont inconnus : les indicateurs comptabilisent uniquement les valeurs disponibles dans le catalogue.
+                </p>
+            )}
+
             {!finished && <SuggestionsCard mealLabel={label} missing={intake.missing} suggestions={suggestions} />}
 
             <section className="mt-6">
@@ -180,6 +186,7 @@ function PlateItem({ mealId, item, canRemove }: { mealId: number; item: MealItem
         router.delete(route('meals.items.destroy', [mealId, item.id]), {
             preserveScroll: true,
             onStart: () => setRemoving(true),
+            onSuccess: () => router.flushAll(),
             onFinish: () => setRemoving(false),
         });
 

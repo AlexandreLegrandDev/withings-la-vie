@@ -41,6 +41,8 @@ export interface NutrientIntake {
 
 /** Bilan d'une journée ou d'un repas (app/Services/DailyIntake.php). */
 export interface Intake {
+    /** Certains ingrédients ont des apports inconnus : les sommes peuvent être partielles. */
+    hasUnknownNutrients?: boolean;
     percent: number;
     nutrients: NutrientIntake[];
     /** Les nutriments les plus en retard, déjà avec leur article : ["du fer", "de la B12"]. */
