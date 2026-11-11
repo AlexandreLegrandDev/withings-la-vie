@@ -13,10 +13,10 @@
         <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-title" content="Withings la vie">
+        <meta name="apple-mobile-web-app-title" content="Vegings">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'Vegings') }}</title>
 
         @routes
         @viteReactRefresh
