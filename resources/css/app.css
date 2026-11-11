@@ -7,6 +7,37 @@
 
 @plugin 'tailwindcss-animate';
 
+.measurement-slider::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: #f5a5c5;
+}
+
+.measurement-slider::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: #f5a5c5;
+}
+
+.measurement-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    margin-top: -10px;
+    border: 0;
+    border-radius: 50%;
+    background: #e33d81;
+}
+
+.measurement-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background: #e33d81;
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 @custom-variant dark (&:is(.dark *));
