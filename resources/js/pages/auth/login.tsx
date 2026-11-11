@@ -17,10 +17,9 @@ type LoginForm = {
 
 interface LoginProps {
     status?: string;
-    canResetPassword: boolean;
 }
 
-export default function Login({ status, canResetPassword }: LoginProps) {
+export default function Login({ status }: LoginProps) {
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({
         email: '',
         password: '',
@@ -84,12 +83,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     />
                     <InputError message={errors.password} className="pl-4" />
                 </div>
-
-                {canResetPassword && (
-                    <Link href={route('password.request')} className="decoration-brand mt-2 self-end pr-2 text-xs underline underline-offset-2">
-                        Mot de passe oublié ?
-                    </Link>
-                )}
 
                 <Button type="submit" disabled={processing} className="bg-night hover:bg-night/90 mt-8 h-14 w-full rounded-full text-base text-white">
                     {processing && <LoaderCircle className="size-4 animate-spin" />}
