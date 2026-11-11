@@ -11,6 +11,82 @@ class ProfileTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_scale_can_be_connected_and_disconnected_from_both_pages(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $this->actingAs($user);
+
+        foreach (['profile', 'meals'] as $returnTo) {
+            $this->post(route('profile.kitchen-scale.connect'), ['return_to' => $returnTo])
+                ->assertSessionHasNoErrors()->assertRedirect(route($returnTo));
+            $this->assertTrue($user->fresh()->kitchen_scale_connected);
+            $this->get('/repas')->assertInertia(fn (Assert $page) => $page
+                ->where('kitchenScaleConnected', true));
+
+            $this->post(route('profile.kitchen-scale.disconnect'), [
+                'return_to' => $returnTo, 'user_id' => $other->id,
+            ])->assertSessionHasNoErrors()->assertRedirect(route($returnTo));
+            $this->assertFalse($user->fresh()->kitchen_scale_connected);
+            $this->get('/profil')->assertInertia(fn (Assert $page) => $page
+                ->where('profile.kitchen_scale_connected', false));
+            $this->get('/repas')->assertInertia(fn (Assert $page) => $page
+                ->where('kitchenScaleConnected', false));
+        }
+
+        $this->assertFalse($other->fresh()->kitchen_scale_connected);
+    }
+
+    public function test_disconnect_only_changes_the_authenticated_account(): void
+    {
+        $user = User::factory()->create();
+        $user->kitchen_scale_connected = true;
+        $user->save();
+        $other = User::factory()->create();
+        $other->kitchen_scale_connected = true;
+        $other->save();
+
+        $this->actingAs($user)->post(route('profile.kitchen-scale.disconnect'), ['user_id' => $other->id])
+            ->assertRedirect(route('profile'));
+        $this->assertFalse($user->fresh()->kitchen_scale_connected);
+        $this->assertTrue($other->fresh()->kitchen_scale_connected);
+    }
+
+    public function test_guests_cannot_disconnect_a_kitchen_scale(): void
+    {
+        $this->post(route('profile.kitchen-scale.disconnect'))->assertRedirect(route('login'));
+    }
+
+    public function test_kitchen_scale_is_disconnected_by_default(): void
+    {
+        $user = User::factory()->create()->fresh();
+        $this->assertFalse($user->kitchen_scale_connected);
+        $this->actingAs($user)->get('/profil')->assertInertia(fn (Assert $page) => $page
+            ->where('profile.kitchen_scale_connected', false));
+    }
+
+    public function test_connecting_a_kitchen_scale_only_updates_the_authenticated_account(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $this->actingAs($user)->post(route('profile.kitchen-scale.connect'), ['user_id' => $other->id])
+            ->assertSessionHasNoErrors()->assertRedirect(route('profile'));
+
+        $this->assertTrue($user->fresh()->kitchen_scale_connected);
+        $this->assertFalse($other->fresh()->kitchen_scale_connected);
+        $this->get('/profil')->assertInertia(fn (Assert $page) => $page
+            ->where('profile.kitchen_scale_connected', true));
+
+        $this->post(route('profile.kitchen-scale.connect'))->assertRedirect(route('profile'));
+        $this->assertTrue($user->fresh()->kitchen_scale_connected);
+    }
+
+    public function test_guests_cannot_connect_a_kitchen_scale(): void
+    {
+        $this->post(route('profile.kitchen-scale.connect'))->assertRedirect(route('login'));
+    }
+
     public function test_updating_weight_adds_a_new_entry_for_the_authenticated_user_at_the_current_time(): void
     {
         $this->travelTo(now()->startOfSecond());

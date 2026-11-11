@@ -64,6 +64,7 @@ class User extends Authenticatable
             'zinc_target_mg' => 'decimal:3',
             'b12_target_ug' => 'decimal:3',
             'b12_reminder_interval_days' => 'integer',
+            'kitchen_scale_connected' => 'boolean',
         ];
     }
 

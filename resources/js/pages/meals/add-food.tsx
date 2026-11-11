@@ -1,7 +1,10 @@
 import { AuthInput } from '@/components/auth-input';
+import { IngredientNutrients } from '@/components/ingredient-nutrients';
+import { IngredientWeighing } from '@/components/ingredient-weighing';
 import InputError from '@/components/input-error';
 import { mealLabels, type MealType } from '@/components/meal-card';
 import { Button } from '@/components/ui/button';
+import { useKitchenScale } from '@/contexts/kitchen-scale-context';
 import MobileLayout from '@/layouts/mobile-layout';
 import { cn } from '@/lib/utils';
 import type { Food, FoodSuggestion } from '@/types';
@@ -64,7 +67,7 @@ export default function AddFood({ meal, suggestions, foods }: AddFoodProps) {
             </header>
 
             {selected !== null ? (
-                <WeightForm mealId={meal.id} foodName={selected} onCancel={() => setSelected(null)} />
+                <WeightForm key={selected} mealId={meal.id} foodName={selected} onCancel={() => setSelected(null)} />
             ) : (
                 <>
                     <div className="mt-5 flex items-center gap-3">
@@ -197,56 +200,86 @@ function FoodRow({ food, color, onSelect }: { food: Food; color: string; onSelec
 
 /** Étape 2 : le poids de l'aliment choisi (saisi à la main tant que la balance n'est pas branchée). */
 function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: string; onCancel: () => void }) {
+    const { connected } = useKitchenScale();
+    const [weighing, setWeighing] = useState(false);
     const { data, setData, post, processing, errors } = useForm({ food_name: foodName, weight_g: '' });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        if (processing) return;
         // Le serveur renvoie ensuite sur la page du repas
         post(route('meals.items.store', mealId));
     };
 
     return (
-        <form onSubmit={submit} className="mt-6 flex flex-col">
-            <div className="flex items-center gap-3 rounded-3xl bg-[#e0f5e9] p-4">
-                <div className="min-w-0 flex-1">
-                    <p className="text-[0.7rem] font-medium tracking-widest text-neutral-500 uppercase">Aliment choisi</p>
-                    <p className="truncate text-lg font-bold">{foodName}</p>
+        <>
+            <form onSubmit={submit} className="mt-6 flex flex-col">
+                <div className="flex items-center gap-3 rounded-3xl bg-[#e0f5e9] p-4">
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[0.7rem] font-medium tracking-widest text-neutral-500 uppercase">Aliment choisi</p>
+                        <p className="truncate text-lg font-bold">{foodName}</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        aria-label="Changer d'aliment"
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white"
+                    >
+                        <X className="size-4" />
+                    </button>
                 </div>
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    aria-label="Changer d'aliment"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white"
-                >
-                    <X className="size-4" />
-                </button>
-            </div>
-            <InputError message={errors.food_name} className="mt-2 pl-4" />
+                <InputError message={errors.food_name} className="mt-2 pl-4" />
 
-            <div className="mt-5 grid gap-2">
-                <label htmlFor="weight_g" className="pl-4 text-sm font-medium">
-                    Poids (g)
-                </label>
-                <AuthInput
-                    id="weight_g"
-                    type="number"
-                    inputMode="decimal"
-                    min="1"
-                    max="5000"
-                    step="any"
-                    required
-                    autoFocus
-                    value={data.weight_g}
-                    onChange={(e) => setData('weight_g', e.target.value)}
-                    placeholder="150"
-                />
-                <InputError message={errors.weight_g} className="pl-4" />
-            </div>
+                <div className="mt-5 grid gap-2">
+                    <label htmlFor="weight_g" className="pl-4 text-sm font-medium">
+                        Poids (g)
+                    </label>
+                    <AuthInput
+                        id="weight_g"
+                        type="number"
+                        inputMode="decimal"
+                        min="1"
+                        max="5000"
+                        step="any"
+                        required
+                        autoFocus
+                        value={data.weight_g}
+                        onChange={(e) => setData('weight_g', e.target.value)}
+                        placeholder="150"
+                    />
+                    <InputError message={errors.weight_g} className="pl-4" />
+                </div>
 
-            <Button type="submit" disabled={processing} className="bg-night hover:bg-night/90 mt-6 h-14 w-full rounded-full text-base text-white">
-                {processing && <LoaderCircle className="size-4 animate-spin" />}
-                Ajouter dans l'assiette
-            </Button>
-        </form>
+                <div className="mt-5">
+                    <IngredientNutrients />
+                </div>
+
+                {connected && (
+                    <button
+                        type="button"
+                        disabled={processing}
+                        onClick={() => setWeighing(true)}
+                        className="mt-6 mb-4 self-start text-sm text-black underline underline-offset-4 disabled:opacity-50"
+                    >
+                        Peser avec la balance
+                    </button>
+                )}
+
+                <Button type="submit" disabled={processing} className={cn('bg-night hover:bg-night/90 h-14 w-full rounded-full text-base text-white', !connected && 'mt-6')}>
+                    {processing && <LoaderCircle className="size-4 animate-spin" />}
+                    Ajouter dans l'assiette
+                </Button>
+            </form>
+            <IngredientWeighing
+                mealId={mealId}
+                foodName={foodName}
+                open={weighing}
+                onClose={() => setWeighing(false)}
+                onManual={(weight) => {
+                    setData('weight_g', weight);
+                    setWeighing(false);
+                }}
+            />
+        </>
     );
 }

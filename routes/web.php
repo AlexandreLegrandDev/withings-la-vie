@@ -19,6 +19,8 @@ Route::middleware(['auth'])->group(function () {
     Route::inertia('suivi', 'tracking')->name('tracking');
     Route::get('profil', [ProfileController::class, 'index'])->name('profile');
     Route::post('profil/poids', [ProfileController::class, 'storeWeight'])->name('profile.weight.store');
+    Route::post('profil/balance-cuisine/connecter', [ProfileController::class, 'connectKitchenScale'])->name('profile.kitchen-scale.connect');
+    Route::post('profil/balance-cuisine/deconnecter', [ProfileController::class, 'disconnectKitchenScale'])->name('profile.kitchen-scale.disconnect');
 
     // Le starter kit redirige vers « dashboard » après la connexion : on renvoie vers l'accueil.
     Route::redirect('dashboard', '/')->name('dashboard');
