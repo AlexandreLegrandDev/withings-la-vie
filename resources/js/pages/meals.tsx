@@ -9,21 +9,24 @@ const dayMeals: { type: MealType; share: number }[] = [
     { type: 'dinner', share: 30 },
 ];
 
+type MealDates = {
+    created_at: string | null;
+    finished_at: string | null;
+};
+
+export function getMealStatus(meal: MealDates): MealStatus {
+    if (meal.finished_at) return 'done';
+    if (meal.created_at) return 'in_progress';
+    return 'todo';
+}
+
 interface MealsProps {
     /** Id en base du repas du jour pour chaque type, null s'il n'est pas encore créé (envoyé par MealController@index). */
     mealIds: Record<MealType, number | null>;
+    mealDates: Record<MealType, MealDates>;
 }
 
-export default function Meals({ mealIds }: MealsProps) {
-    // État de chaque repas, en dur pour l'instant (comme sur la maquette).
-    // À calculer plus tard, par ex. : « done » si le repas a un finished_at, « in_progress » s'il a commencé, sinon « todo ».
-    const statuses: Record<MealType, MealStatus> = {
-        breakfast: 'done',
-        lunch: 'in_progress',
-        snack: 'todo',
-        dinner: 'todo',
-    };
-
+export default function Meals({ mealIds, mealDates }: MealsProps) {
     return (
         <MobileLayout title="Repas">
             <p className="text-xs font-medium tracking-widest text-neutral-500 uppercase">Nouveau repas</p>
@@ -35,7 +38,7 @@ export default function Meals({ mealIds }: MealsProps) {
             {/* Chaque carte ouvre la page du repas du jour (/repas/{id}), en le créant au premier clic */}
             <div className="mt-6 grid grid-cols-2 gap-3">
                 {dayMeals.map(({ type, share }) => (
-                    <MealCard key={type} type={type} share={share} status={statuses[type]} mealId={mealIds[type]} />
+                    <MealCard key={type} type={type} share={share} status={getMealStatus(mealDates[type])} mealId={mealIds[type]} />
                 ))}
             </div>
 
