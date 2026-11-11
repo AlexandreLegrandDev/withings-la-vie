@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import MobileLayout from '@/layouts/mobile-layout';
 import { Link, useForm } from '@inertiajs/react';
-import { Bluetooth, Pencil, Plus, Settings } from 'lucide-react';
+import { Bluetooth, Check, Pencil, Plus, Settings } from 'lucide-react';
 import { useState } from 'react';
 
 type WeightEntry = { id: number; weight_kg: number; recorded_at: string };
@@ -13,6 +13,7 @@ type ProfileData = {
     sex: string | null;
     diet_status: string | null;
     transition_days: number | null;
+    kitchen_scale_connected: boolean;
     protein_target_g: string | null;
     iron_target_mg: string | null;
     b12_target_ug: string | null;
@@ -24,6 +25,8 @@ const number = (value: number | string) => Number(value).toLocaleString('fr-FR',
 const date = (value: string) => new Date(value).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'Europe/Paris' });
 
 export default function Profile({ profile, weights }: { profile: ProfileData; weights: WeightEntry[] }) {
+    const [scaleDialogOpen, setScaleDialogOpen] = useState(false);
+    const scaleConnection = useForm({});
     const latest = weights.at(-1);
     const diet = profile.diet_status === 'vegetarian' ? 'Végétarien' : profile.diet_status === 'transition' ? 'En conversion' : 'Non renseigné';
     const days = profile.transition_days;
@@ -77,7 +80,7 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                             {value}
                             {label === 'Poids' && (
                                 <>
-                                    <span className="mt-1 flex items-center gap-1 text-[10px] font-normal text-brand">
+                                    <span className="text-brand mt-1 flex items-center gap-1 text-[10px] font-normal">
                                         <Pencil className="size-3" aria-hidden="true" />
                                         Modifier
                                     </span>
@@ -110,7 +113,12 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                 <h2 id="devices-title" className="mb-2 text-sm font-semibold">
                     Appareils
                 </h2>
-                <Dialog>
+                <Dialog
+                    open={scaleDialogOpen}
+                    onOpenChange={(open) => {
+                        if (!scaleConnection.processing) setScaleDialogOpen(open);
+                    }}
+                >
                     <DialogTrigger asChild>
                         <button
                             type="button"
@@ -121,24 +129,53 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                             </span>
                             <span className="flex-1">
                                 <span className="block text-xs font-semibold">Balance de cuisine Withings</span>
-                                <span className="mt-0.5 block text-[10px] text-neutral-500">Aucune balance connectée</span>
+                                <span className="mt-0.5 block text-[10px] text-neutral-500">
+                                    {profile.kitchen_scale_connected ? 'Balance connectée à ton compte' : 'Aucune balance connectée'}
+                                </span>
                             </span>
-                            <Bluetooth className="size-4 shrink-0 text-neutral-500" aria-hidden="true" />
+                            {profile.kitchen_scale_connected ? (
+                                <span className="size-2 shrink-0 rounded-full bg-[#5dc28c]" aria-hidden="true" />
+                            ) : (
+                                <Bluetooth className="size-4 shrink-0 text-neutral-500" aria-hidden="true" />
+                            )}
                         </button>
                     </DialogTrigger>
                     <DialogContent className="w-[calc(100%_-_2rem)] max-w-sm rounded-3xl border-neutral-200 bg-white text-black">
                         <div className="mx-auto flex size-28 items-center justify-center rounded-3xl bg-[#d9ecfa] p-5">
                             <img src="/image/Balance_sansbol.svg" alt="" className="size-full" />
                         </div>
-                        <DialogTitle className="text-center">Connecter ta balance de cuisine</DialogTitle>
+                        <DialogTitle className="text-center">
+                            {profile.kitchen_scale_connected ? 'Ta balance est connectée' : 'Connecter ta balance de cuisine'}
+                        </DialogTitle>
                         <DialogDescription className="text-center text-neutral-600">
-                            Allume ta balance et garde-la près de ton téléphone pour l’appairer en Bluetooth.
+                            {profile.kitchen_scale_connected
+                                ? 'Ta balance de cuisine est associée à ton compte.'
+                                : 'Allume ta balance et garde-la près de ton téléphone pour l’appairer en Bluetooth.'}
                         </DialogDescription>
-                        <Button type="button" className="bg-brand hover:bg-brand/90 h-12 rounded-full text-white">
-                            <Bluetooth className="size-4" aria-hidden="true" />
-                            Appairer en Bluetooth
+                        <Button
+                            type="button"
+                            disabled={scaleConnection.processing || profile.kitchen_scale_connected}
+                            onClick={() => {
+                                if (scaleConnection.processing || profile.kitchen_scale_connected) return;
+                                scaleConnection.post(route('profile.kitchen-scale.connect'), {
+                                    preserveScroll: true,
+                                    onSuccess: () => setScaleDialogOpen(false),
+                                });
+                            }}
+                            className="bg-brand hover:bg-brand/90 h-12 rounded-full text-white"
+                        >
+                            {profile.kitchen_scale_connected ? (
+                                <Check className="size-4" aria-hidden="true" />
+                            ) : (
+                                <Bluetooth className="size-4" aria-hidden="true" />
+                            )}
+                            {scaleConnection.processing
+                                ? 'Connexion…'
+                                : profile.kitchen_scale_connected
+                                  ? 'Balance connectée'
+                                  : 'Appairer en Bluetooth'}
                         </Button>
-                        <p className="text-center text-xs text-neutral-500">Démonstration : aucune connexion ne sera lancée.</p>
+                        <p className="text-center text-xs text-neutral-500">Appairage simulé : l’association est enregistrée sur ton compte.</p>
                     </DialogContent>
                 </Dialog>
                 <Dialog>

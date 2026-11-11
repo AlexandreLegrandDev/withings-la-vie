@@ -10,6 +10,15 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    public function connectKitchenScale(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $user->kitchen_scale_connected = true;
+        $user->save();
+
+        return to_route('profile');
+    }
+
     public function storeWeight(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -33,7 +42,7 @@ class ProfileController extends Controller
         return Inertia::render('profile', [
             'profile' => [
                 ...$user->only(['name', 'sex', 'diet_status', 'protein_target_g', 'iron_target_mg',
-                    'b12_target_ug', 'calcium_target_mg', 'zinc_target_mg']),
+                    'b12_target_ug', 'calcium_target_mg', 'zinc_target_mg', 'kitchen_scale_connected']),
                 'transition_days' => $user->diet_status === 'transition' && $user->transition_started_on
                     ? max(0, (int) Carbon::parse($user->transition_started_on->toDateString(), 'Europe/Paris')
                         ->diffInDays(Carbon::today('Europe/Paris'))) : null,
