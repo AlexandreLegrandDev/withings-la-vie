@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Meal;
 use App\Models\User;
+use Carbon\CarbonPeriod;
 
 /**
  * Bilan des apports d'une journée : ce qui a été mangé (somme des totaux des repas du jour)
@@ -43,6 +44,36 @@ class DailyIntake
             ->first();
 
         return $this->compare($totals, $user);
+    }
+
+    /**
+     * Bilan de chaque jour entre $from et $to inclus (AAAA-MM-JJ), en une seule requête.
+     * Un jour sans repas compte comme 0 %.
+     *
+     * @return array<string, array{percent: int, nutrients: list<array<string, mixed>>, missing: list<string>}> clé = date
+     */
+    public function forPeriod(User $user, string $from, string $to): array
+    {
+        $sums = collect(self::NUTRIENTS)->map(fn ($n) => "COALESCE(SUM({$n[1]}), 0) as {$n[1]}")->join(', ');
+
+        // whereDate : marche que la date soit stockée « 2026-11-10 » ou « 2026-11-10 00:00:00 »
+        $totalsByDay = $user->meals()
+            ->whereDate('meal_date', '>=', $from)
+            ->whereDate('meal_date', '<=', $to)
+            ->selectRaw("DATE(meal_date) as day, {$sums}")
+            ->groupBy('day')
+            ->get()
+            ->keyBy('day');
+
+        $empty = (object) collect(self::NUTRIENTS)->mapWithKeys(fn ($n) => [$n[1] => 0])->all();
+
+        $days = [];
+        foreach (CarbonPeriod::create($from, $to) as $day) {
+            $date = $day->toDateString();
+            $days[$date] = $this->compare($totalsByDay->get($date) ?? $empty, $user);
+        }
+
+        return $days;
     }
 
     /**

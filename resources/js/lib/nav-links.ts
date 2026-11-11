@@ -14,7 +14,7 @@ export interface NavLink {
  * Les URLs correspondent aux routes déclarées dans routes/web.php.
  */
 export const navLinks: NavLink[] = [
-    { label: "Aujourd'hui", href: '/', icon: House },
+    { label: "Aujourd'hui", href: '/', icon: House, also: ['/bilan'] },
     { label: 'Repas', href: '/repas', icon: CircleDot },
     { label: 'Suivi', href: '/suivi', icon: ChartNoAxesColumn },
     { label: 'Profil', href: '/profil', icon: User, also: ['/settings'] },
@@ -23,7 +23,8 @@ export const navLinks: NavLink[] = [
 /** Vrai si l'URL actuelle correspond au lien (exacte pour l'accueil, par préfixe pour les autres). */
 export function isActive(currentUrl: string, { href, also = [] }: NavLink) {
     const path = currentUrl.split('?')[0];
-    if (href === '/') return path === '/';
+    // L'accueil « / » ne peut pas servir de préfixe (toutes les URLs commencent par /) : on le compare en entier
+    if (href === '/') return path === '/' || also.some((prefix) => path.startsWith(prefix));
     return [href, ...also].some((prefix) => path.startsWith(prefix));
 }
 

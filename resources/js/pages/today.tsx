@@ -93,10 +93,14 @@ function missingSentence(missing: string[]) {
     return `Il te manque surtout ${missing.join(' et ')}.`;
 }
 
-/** Carte rose du haut : anneau d'avancement + message. */
+/** Carte rose du haut : anneau d'avancement + message. Ouvre le bilan de la journée. */
 function DayCard({ percent, missing }: { percent: number; missing: string[] }) {
     return (
-        <section className="relative flex shrink-0 items-center gap-4 overflow-hidden rounded-3xl bg-[#ffd9e8] p-[clamp(0.75rem,2vh,1rem)]">
+        <Link
+            href={route('today.summary')}
+            prefetch
+            className="relative flex shrink-0 items-center gap-4 overflow-hidden rounded-3xl bg-[#ffd9e8] p-[clamp(0.75rem,2vh,1rem)] transition active:scale-[0.98]"
+        >
             {/* Rond décoratif en bas à droite, comme sur la maquette */}
             <span aria-hidden className="absolute -right-6 -bottom-10 size-28 rounded-full bg-[#ffc2da]" />
 
@@ -110,8 +114,12 @@ function DayCard({ percent, missing }: { percent: number; missing: string[] }) {
                 <p className="text-[0.7rem] font-medium tracking-widest text-[#cc7499] uppercase">Ta journée</p>
                 <p className="mt-0.5 text-lg leading-tight font-bold">{headline(percent)}</p>
                 <p className="mt-1 text-sm leading-snug text-[#b34d7a]">{missingSentence(missing)}</p>
+                <p className="mt-1.5 flex items-center gap-0.5 text-xs font-semibold text-[#cc7499]">
+                    Clique pour voir le bilan de ta journée
+                    <ChevronRight className="size-3.5 shrink-0" />
+                </p>
             </div>
-        </section>
+        </Link>
     );
 }
 

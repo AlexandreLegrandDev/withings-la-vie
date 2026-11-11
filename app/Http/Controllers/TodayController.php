@@ -10,6 +10,16 @@ use Inertia\Response;
 
 class TodayController extends Controller
 {
+    /** Page « Bilan de la journée » : chaque nutriment du jour, atteint ou non (ouverte depuis la carte « Ta journée »). */
+    public function summary(Request $request, DailyIntake $dailyIntake): Response
+    {
+        $today = Carbon::today(MealController::TIMEZONE)->toDateString();
+
+        return Inertia::render('day-summary', [
+            'intake' => $dailyIntake->forUser($request->user(), $today),
+        ]);
+    }
+
     /** Page d'accueil « Aujourd'hui » : avancement du jour, apports par nutriment et repas en cours. */
     public function index(Request $request, DailyIntake $dailyIntake): Response
     {
