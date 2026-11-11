@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use DateTime;
+use App\Services\NutritionTargetCalculator;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\NutritionTargetCalculator;
 
 class RegisteredUserController extends Controller
 {
@@ -52,15 +51,19 @@ class RegisteredUserController extends Controller
             'weight_kg' => ['nullable', 'numeric', 'decimal:0,2', 'gt:0', 'max:9999.99'],
         ]);
 
-        if(isset($validated['diet_status']) && $validated['diet_status'] === "transition") {
-            $transition_started_on = date('d/m/Y');
-        }
-        
+        $transition_started_on = ($validated['diet_status'] ?? null) === 'transition'
+            ? now()->toDateString()
+            : null;
+
         $calculator = new NutritionTargetCalculator();
 
         $targets = [
-            'protein_target_g' => $calculator->protein((float) $validated['weight_kg']),
-            'calcium_target_mg' => $calculator->calcium($validated['date_of_birth']),
+            'protein_target_g' => isset($validated['weight_kg'])
+                ? $calculator->protein((float) $validated['weight_kg'])
+                : null,
+            'calcium_target_mg' => isset($validated['date_of_birth'])
+                ? $calculator->calcium($validated['date_of_birth'])
+                : null,
         ];
 
         $protein_target_g = $targets['protein_target_g'];
@@ -70,13 +73,15 @@ class RegisteredUserController extends Controller
         $b12_target_ug = 4;
 
 
-        $user = DB::transaction(function () use ($validated, 
-        $protein_target_g, 
-        $iron_target_mg, 
-        $calcium_target_mg,
-        $zinc_target_mg,
-        $b12_target_ug,
-        $transition_started_on) {
+        $user = DB::transaction(function () use (
+            $validated,
+            $protein_target_g,
+            $iron_target_mg,
+            $calcium_target_mg,
+            $zinc_target_mg,
+            $b12_target_ug,
+            $transition_started_on,
+        ) {
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -109,6 +114,5 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         return to_route('dashboard');
-        dd($request);
     }
 }
