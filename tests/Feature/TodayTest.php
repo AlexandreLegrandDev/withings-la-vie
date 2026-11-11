@@ -50,6 +50,19 @@ class TodayTest extends TestCase
         );
     }
 
+    public function test_day_summary_page_shows_todays_intake()
+    {
+        $user = $this->userWithTargets();
+        $user->meals()->create(['meal_date' => Carbon::today('Europe/Paris')->toDateString(), 'type' => 'lunch', 'zinc_total_mg' => 10]);
+
+        $this->actingAs($user)->get('/bilan')->assertInertia(fn (Assert $page) => $page
+            ->component('day-summary')
+            ->has('intake.nutrients', 4)
+            ->where('intake.nutrients.3.key', 'zinc')
+            ->where('intake.nutrients.3.percent', 100)
+        );
+    }
+
     public function test_home_without_meals_starts_at_zero()
     {
         $this->actingAs($this->userWithTargets())->get('/')->assertInertia(fn (Assert $page) => $page
