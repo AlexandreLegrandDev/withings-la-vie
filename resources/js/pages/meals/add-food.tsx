@@ -68,7 +68,13 @@ export default function AddFood({ meal, suggestions, foods }: AddFoodProps) {
             </header>
 
             {selected !== null ? (
-                <WeightForm key={selected} mealId={meal.id} foodName={selected} onCancel={() => setSelected(null)} />
+                <WeightForm
+                    key={selected}
+                    mealId={meal.id}
+                    foodName={selected}
+                    food={foods.find((food) => food.name === selected)}
+                    onCancel={() => setSelected(null)}
+                />
             ) : (
                 <>
                     <div className="mt-5 flex items-center gap-3">
@@ -219,10 +225,10 @@ function FoodRow({ food, color, onSelect }: { food: Food; color: string; onSelec
 }
 
 /** Étape 2 : le poids de l'aliment choisi (saisi à la main tant que la balance n'est pas branchée). */
-function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: string; onCancel: () => void }) {
+function WeightForm({ mealId, foodName, food, onCancel }: { mealId: number; foodName: string; food?: Food; onCancel: () => void }) {
     const { connected } = useKitchenScale();
     const [weighing, setWeighing] = useState(false);
-    const { data, setData, post, processing, errors } = useForm({ food_name: foodName, weight_g: '' });
+    const { data, setData, post, processing, errors } = useForm({ food_key: food?.key ?? null, food_name: foodName, weight_g: '' });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -249,6 +255,7 @@ function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: 
                     </button>
                 </div>
                 <InputError message={errors.food_name} className="mt-2 pl-4" />
+                <InputError message={errors.food_key} className="mt-2 pl-4" />
 
                 <div className="mt-5 grid gap-2">
                     <label htmlFor="weight_g" className="pl-4 text-sm font-medium">
@@ -258,9 +265,9 @@ function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: 
                         id="weight_g"
                         type="number"
                         inputMode="decimal"
-                        min="1"
+                        min="0.01"
                         max="5000"
-                        step="any"
+                        step="0.01"
                         required
                         autoFocus
                         value={data.weight_g}
@@ -271,7 +278,7 @@ function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: 
                 </div>
 
                 <div className="mt-5">
-                    <IngredientNutrients />
+                    <IngredientNutrients per100g={food?.per100g} weightG={Number(data.weight_g)} />
                 </div>
 
                 {connected && (
@@ -297,6 +304,7 @@ function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: 
             <IngredientWeighing
                 mealId={mealId}
                 foodName={foodName}
+                food={food}
                 open={weighing}
                 onClose={() => setWeighing(false)}
                 onManual={(weight) => {

@@ -62,6 +62,8 @@ export interface FoodSuggestion {
 }
 
 /** Aliment du catalogue JSON (page « Choisir un aliment »). */
+export type FoodNutrients = Record<'protein_g' | 'iron_mg' | 'zinc_mg' | 'calcium_mg' | 'b12_ug', number | null>;
+
 export interface Food {
     key: string;
     name: string;
@@ -69,6 +71,7 @@ export interface Food {
     category: 'la_vie' | 'base';
     /** Apports pour 100 g, déjà rédigés : « 15 g prot. · 3 mg fer /100 g ». */
     nutrients: string;
+    per100g: FoodNutrients;
     badge?: string | null;
 }
 

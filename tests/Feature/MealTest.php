@@ -89,7 +89,7 @@ class MealTest extends TestCase
         $this->actingAs(User::factory()->create())->get("/repas/{$meal->id}/ingredients/ajouter")->assertNotFound();
     }
 
-    public function test_catalogue_ingredients_with_long_names_can_be_added_without_calculating_nutrients(): void
+    public function test_catalogue_ingredients_with_long_names_can_be_added(): void
     {
         $catalogue = json_decode(file_get_contents(resource_path('data/catalogue-aliments.json')), true, 512, JSON_THROW_ON_ERROR);
         $food = collect($catalogue)->first(fn ($entry) => mb_strlen($entry['name']) > 100);
@@ -103,8 +103,6 @@ class MealTest extends TestCase
 
         $this->assertDatabaseHas('meal_items', [
             'meal_id' => $meal->id, 'food_name' => $food['name'], 'weight_g' => 150,
-            'protein_total_g' => null, 'iron_total_mg' => null,
-            'calcium_total_mg' => null, 'zinc_total_mg' => null, 'b12_total_ug' => null,
         ]);
     }
 
