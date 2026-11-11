@@ -13,7 +13,7 @@ use Inertia\Response;
 class MealController extends Controller
 {
     /** Fuseau utilisé pour savoir quel jour on est (l'appli stocke en UTC, mais « aujourd'hui » est celui de la France). */
-    private const TIMEZONE = 'Europe/Paris';
+    public const TIMEZONE = 'Europe/Paris';
 
     /** Page Repas : les 4 repas du jour, avec l'id de ceux qui existent déjà en base (null sinon). */
     public function index(Request $request): Response

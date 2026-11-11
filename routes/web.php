@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MealController;
 use App\Http\Controllers\MealItemController;
+use App\Http\Controllers\TodayController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -9,7 +10,7 @@ use Inertia\Inertia;
 // Route::inertia(URL, page React) affiche resources/js/pages/<page>.tsx.
 // Quand une page aura besoin de données, on passera à Route::get(...) + Inertia::render(page, [données]).
 Route::middleware(['auth'])->group(function () {
-    Route::inertia('/', 'today')->name('today');
+    Route::get('/', [TodayController::class, 'index'])->name('today');
     // Repas : la liste du jour, la création d'un repas au clic sur sa carte, et la page d'un repas (/repas/12)
     Route::get('repas', [MealController::class, 'index'])->name('meals');
     Route::post('repas', [MealController::class, 'store'])->name('meals.store');
