@@ -41,6 +41,8 @@ export interface NutrientIntake {
 
 /** Bilan d'une journée ou d'un repas (app/Services/DailyIntake.php). */
 export interface Intake {
+    /** Certains ingrédients ont des apports inconnus : les sommes peuvent être partielles. */
+    hasUnknownNutrients?: boolean;
     percent: number;
     nutrients: NutrientIntake[];
     /** Les nutriments les plus en retard, déjà avec leur article : ["du fer", "de la B12"]. */
@@ -61,14 +63,18 @@ export interface FoodSuggestion {
     badge?: string;
 }
 
-/** Aliment du catalogue (page « Choisir un aliment »). Viendra de l'API des aliments. */
+/** Aliment du catalogue JSON (page « Choisir un aliment »). */
+export type FoodNutrients = Record<'protein_g' | 'iron_mg' | 'zinc_mg' | 'calcium_mg' | 'b12_ug', number | null>;
+
 export interface Food {
+    key: string;
     name: string;
     /** Rayon du filtre : produits La Vie ou aliments de base. */
     category: 'la_vie' | 'base';
     /** Apports pour 100 g, déjà rédigés : « 15 g prot. · 3 mg fer /100 g ». */
     nutrients: string;
-    badge?: string;
+    per100g: FoodNutrients;
+    badge?: string | null;
 }
 
 export interface User {

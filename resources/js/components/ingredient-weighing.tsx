@@ -3,7 +3,8 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useKitchenScale } from '@/contexts/kitchen-scale-context';
-import { useForm } from '@inertiajs/react';
+import type { Food } from '@/types';
+import { router, useForm } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { useRef } from 'react';
 
@@ -13,19 +14,21 @@ const DEMO_PORTION_G = 100;
 export function IngredientWeighing({
     mealId,
     foodName,
+    food,
     open,
     onClose,
     onManual,
 }: {
     mealId: number;
     foodName: string;
+    food?: Food;
     open: boolean;
     onClose: () => void;
     onManual: (weight: string) => void;
 }) {
     const { connected } = useKitchenScale();
     const screenRef = useRef<HTMLDivElement>(null);
-    const { post, processing, errors } = useForm({ food_name: foodName, weight_g: DEMO_WEIGHT_G });
+    const { post, processing, errors } = useForm({ food_key: food?.key ?? null, food_name: foodName, weight_g: DEMO_WEIGHT_G });
 
     return (
         <Dialog
@@ -47,7 +50,7 @@ export function IngredientWeighing({
                     onSubmit={(event) => {
                         event.preventDefault();
                         if (processing || !connected) return;
-                        post(route('meals.items.store', mealId));
+                        post(route('meals.items.store', mealId), { onSuccess: () => router.flushAll() });
                     }}
                 >
                     <div className="mr-12 flex items-center gap-2 self-start rounded-full bg-[#d0f0e0] px-4 py-2 text-xs font-medium text-[#287354]">
@@ -89,9 +92,9 @@ export function IngredientWeighing({
                         </div>
                     </div>
                     <div className="mt-4">
-                        <IngredientNutrients />
+                        <IngredientNutrients per100g={food?.per100g} weightG={DEMO_WEIGHT_G} />
                     </div>
-                    <InputError message={errors.food_name || errors.weight_g} className="mt-3" />
+                    <InputError message={errors.food_key || errors.food_name || errors.weight_g} className="mt-3" />
                     <div className="mt-auto pt-8">
                         <button
                             type="button"

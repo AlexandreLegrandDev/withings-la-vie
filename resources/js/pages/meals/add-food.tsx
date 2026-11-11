@@ -8,7 +8,7 @@ import { useKitchenScale } from '@/contexts/kitchen-scale-context';
 import MobileLayout from '@/layouts/mobile-layout';
 import { cn } from '@/lib/utils';
 import type { Food, FoodSuggestion } from '@/types';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, LoaderCircle, Plus, ScanLine, Search, X } from 'lucide-react';
 import { useState, type FormEventHandler } from 'react';
 
@@ -17,7 +17,7 @@ interface AddFoodProps {
     meal: { id: number; type: MealType };
     /** Aliments proposés pour ce repas : vide tant que l'API des aliments n'est pas branchée. */
     suggestions: FoodSuggestion[];
-    /** Catalogue des aliments : vide tant que l'API des aliments n'est pas branchée. */
+    /** Liste issue de resources/data/catalogue-aliments.json. */
     foods: Food[];
 }
 
@@ -44,6 +44,7 @@ const normalize = (text: string) =>
 export default function AddFood({ meal, suggestions, foods }: AddFoodProps) {
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState<Filter>('all');
+    const [visibleCount, setVisibleCount] = useState(15);
     // Aliment choisi : on demande alors son poids avant de l'ajouter
     const [selected, setSelected] = useState<string | null>(null);
 
@@ -67,7 +68,13 @@ export default function AddFood({ meal, suggestions, foods }: AddFoodProps) {
             </header>
 
             {selected !== null ? (
-                <WeightForm key={selected} mealId={meal.id} foodName={selected} onCancel={() => setSelected(null)} />
+                <WeightForm
+                    key={selected}
+                    mealId={meal.id}
+                    foodName={selected}
+                    food={foods.find((food) => food.name === selected)}
+                    onCancel={() => setSelected(null)}
+                />
             ) : (
                 <>
                     <div className="mt-5 flex items-center gap-3">
@@ -76,10 +83,13 @@ export default function AddFood({ meal, suggestions, foods }: AddFoodProps) {
                             <input
                                 type="search"
                                 value={query}
-                                onChange={(e) => setQuery(e.target.value)}
+                                onChange={(e) => {
+                                    setQuery(e.target.value);
+                                    setVisibleCount(15);
+                                }}
                                 placeholder="Lentilles, tofu, jambon…"
                                 aria-label="Rechercher un aliment"
-                                maxLength={100}
+                                maxLength={255}
                                 // text-base : en dessous de 16 px, Safari sur iPhone zoome sur le champ
                                 className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-neutral-400"
                             />
@@ -100,7 +110,10 @@ export default function AddFood({ meal, suggestions, foods }: AddFoodProps) {
                             <button
                                 key={value}
                                 type="button"
-                                onClick={() => setFilter(value)}
+                                onClick={() => {
+                                    setFilter(value);
+                                    setVisibleCount(15);
+                                }}
                                 aria-pressed={filter === value}
                                 className={cn(
                                     'shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors',
@@ -144,10 +157,13 @@ export default function AddFood({ meal, suggestions, foods }: AddFoodProps) {
 
                     <section className="mt-5">
                         <h2 className="text-sm font-bold">Tous les aliments</h2>
+                        <p className="mt-1 text-xs text-neutral-500">
+                            {visibleFoods.length} aliment{visibleFoods.length !== 1 ? 's' : ''} trouvé{visibleFoods.length !== 1 ? 's' : ''}
+                        </p>
 
                         <ul className="mt-1 divide-y divide-neutral-100">
-                            {visibleFoods.map((food, index) => (
-                                <li key={food.name}>
+                            {visibleFoods.slice(0, visibleCount).map((food, index) => (
+                                <li key={food.key}>
                                     <FoodRow food={food} color={colors[index % colors.length]} onSelect={() => setSelected(food.name)} />
                                 </li>
                             ))}
@@ -170,6 +186,16 @@ export default function AddFood({ meal, suggestions, foods }: AddFoodProps) {
                             )}
                         </ul>
 
+                        {visibleFoods.length > visibleCount && (
+                            <button
+                                type="button"
+                                onClick={() => setVisibleCount((count) => count + 15)}
+                                className="mt-4 w-full rounded-full border border-neutral-200 px-4 py-3 text-sm font-medium hover:bg-neutral-50"
+                            >
+                                Afficher plus d’aliments
+                            </button>
+                        )}
+
                         {foods.length === 0 && query.trim() === '' && (
                             <p className="mt-2 text-sm text-neutral-500">Le catalogue arrive bientôt. En attendant, tape le nom de ton aliment.</p>
                         )}
@@ -191,7 +217,7 @@ function FoodRow({ food, color, onSelect }: { food: Food; color: string; onSelec
                         <span className="text-brand shrink-0 rounded-full bg-[#ffe0ec] px-1.5 py-0.5 text-[0.6rem] font-semibold">{food.badge}</span>
                     )}
                 </span>
-                <span className="block truncate text-xs text-neutral-500">{food.nutrients}</span>
+                {food.nutrients && <span className="block truncate text-xs text-neutral-500">{food.nutrients}</span>}
             </span>
             <ChevronRight className="size-4 shrink-0 text-neutral-400" />
         </button>
@@ -199,16 +225,16 @@ function FoodRow({ food, color, onSelect }: { food: Food; color: string; onSelec
 }
 
 /** Étape 2 : le poids de l'aliment choisi (saisi à la main tant que la balance n'est pas branchée). */
-function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: string; onCancel: () => void }) {
+function WeightForm({ mealId, foodName, food, onCancel }: { mealId: number; foodName: string; food?: Food; onCancel: () => void }) {
     const { connected } = useKitchenScale();
     const [weighing, setWeighing] = useState(false);
-    const { data, setData, post, processing, errors } = useForm({ food_name: foodName, weight_g: '' });
+    const { data, setData, post, processing, errors } = useForm({ food_key: food?.key ?? null, food_name: foodName, weight_g: '' });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         if (processing) return;
         // Le serveur renvoie ensuite sur la page du repas
-        post(route('meals.items.store', mealId));
+        post(route('meals.items.store', mealId), { onSuccess: () => router.flushAll() });
     };
 
     return (
@@ -229,6 +255,7 @@ function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: 
                     </button>
                 </div>
                 <InputError message={errors.food_name} className="mt-2 pl-4" />
+                <InputError message={errors.food_key} className="mt-2 pl-4" />
 
                 <div className="mt-5 grid gap-2">
                     <label htmlFor="weight_g" className="pl-4 text-sm font-medium">
@@ -238,9 +265,9 @@ function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: 
                         id="weight_g"
                         type="number"
                         inputMode="decimal"
-                        min="1"
+                        min="0.01"
                         max="5000"
-                        step="any"
+                        step="0.01"
                         required
                         autoFocus
                         value={data.weight_g}
@@ -251,7 +278,7 @@ function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: 
                 </div>
 
                 <div className="mt-5">
-                    <IngredientNutrients />
+                    <IngredientNutrients per100g={food?.per100g} weightG={Number(data.weight_g)} />
                 </div>
 
                 {connected && (
@@ -265,7 +292,11 @@ function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: 
                     </button>
                 )}
 
-                <Button type="submit" disabled={processing} className={cn('bg-night hover:bg-night/90 h-14 w-full rounded-full text-base text-white', !connected && 'mt-6')}>
+                <Button
+                    type="submit"
+                    disabled={processing}
+                    className={cn('bg-night hover:bg-night/90 h-14 w-full rounded-full text-base text-white', !connected && 'mt-6')}
+                >
                     {processing && <LoaderCircle className="size-4 animate-spin" />}
                     Ajouter dans l'assiette
                 </Button>
@@ -273,6 +304,7 @@ function WeightForm({ mealId, foodName, onCancel }: { mealId: number; foodName: 
             <IngredientWeighing
                 mealId={mealId}
                 foodName={foodName}
+                food={food}
                 open={weighing}
                 onClose={() => setWeighing(false)}
                 onManual={(weight) => {
