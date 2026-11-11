@@ -38,8 +38,8 @@ export default defineConfig({
             registerType: 'autoUpdate',
             injectRegister: false, // enregistré à la main dans app.tsx (pas de index.html avec Laravel)
             manifest: {
-                name: 'Vegings',
-                short_name: 'Vegings',
+                name: 'Veggings',
+                short_name: 'Veggings',
                 lang: 'fr',
                 start_url: '/',
                 scope: '/',

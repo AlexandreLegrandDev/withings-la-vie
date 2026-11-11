@@ -1,7 +1,7 @@
 import { defineConfig } from '@vite-pwa/assets-generator/config';
 
-// Génère les icônes PNG de l'app à partir de public/icons/icon.svg : npx pwa-assets-generator
-// Le SVG a déjà son fond blanc et ses marges, donc aucun padding ajouté.
+// Génère les icônes PNG de l'app à partir de public/icons/logo.png (logo Veggings) : npx pwa-assets-generator
+// Le logo a déjà son fond blanc et ses marges, donc aucun padding ajouté.
 const options = { padding: 0, resizeOptions: { background: '#ffffff' } };
 
 export default defineConfig({
@@ -10,5 +10,5 @@ export default defineConfig({
         maskable: { sizes: [512], ...options },
         apple: { sizes: [180], ...options },
     },
-    images: ['public/icons/icon.svg'],
+    images: ['public/icons/logo.png'],
 });

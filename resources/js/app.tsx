@@ -18,7 +18,7 @@ declare global {
     const route: typeof routeFn;
 }
 
-const appName = import.meta.env.VITE_APP_NAME || 'Vegings';
+const appName = import.meta.env.VITE_APP_NAME || 'Veggings';
 
 type PageModule = { default: ComponentType & { layout?: (page: ReactNode) => ReactNode } };
 

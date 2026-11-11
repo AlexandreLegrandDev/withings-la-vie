@@ -10,13 +10,13 @@
         {{-- PWA : manifest (généré par vite-plugin-pwa au build) et icônes --}}
         <link rel="manifest" href="/build/manifest.webmanifest">
         <link rel="icon" href="/favicon.ico" sizes="48x48">
-        <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+        <link rel="icon" href="/icons/pwa-192x192.png" type="image/png" sizes="192x192">
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-title" content="Vegings">
+        <meta name="apple-mobile-web-app-title" content="Veggings">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-        <title inertia>{{ config('app.name', 'Vegings') }}</title>
+        <title inertia>{{ config('app.name', 'Veggings') }}</title>
 
         @routes
         @viteReactRefresh
