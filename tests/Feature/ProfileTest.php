@@ -54,6 +54,7 @@ class ProfileTest extends TestCase
 
     public function test_profile_only_shows_the_authenticated_users_weights_in_date_order(): void
     {
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-11-11 12:00:00', 'Europe/Paris'));
         $user = User::factory()->create([
             'diet_status' => 'transition',
             'transition_started_on' => now()->subWeeks(3)->toDateString(),
@@ -66,7 +67,7 @@ class ProfileTest extends TestCase
         $this->actingAs($user)->get('/profil')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('profile')
             ->where('profile.name', $user->name)
-            ->where('profile.transition_weeks', 3)
+            ->where('profile.transition_days', 21)
             ->where('profile.protein_target_g', '51.000')
             ->has('weights', 2)
             ->where('weights.0.weight_kg', 62)
@@ -78,7 +79,7 @@ class ProfileTest extends TestCase
         $this->actingAs(User::factory()->create())->get('/profil')
             ->assertOk()->assertInertia(fn (Assert $page) => $page
                 ->component('profile')
-                ->where('profile.transition_weeks', null)
+                ->where('profile.transition_days', null)
                 ->has('weights', 0));
     }
 }

@@ -17,6 +17,7 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'diet_status' => ['sometimes', 'nullable', Rule::in(['transition', 'vegetarian'])],
             'name' => ['required', 'string', 'max:255'],
 
             'email' => [

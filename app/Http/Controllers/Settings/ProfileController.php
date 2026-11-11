@@ -21,6 +21,7 @@ class ProfileController extends Controller
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'dietStatus' => $request->user()->diet_status,
         ]);
     }
 
@@ -30,6 +31,15 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $request->user()->fill($request->validated());
+
+        if (array_key_exists('diet_status', $request->validated())) {
+            $user = $request->user();
+            if ($user->diet_status !== 'transition') {
+                $user->transition_started_on = null;
+            } elseif ($user->isDirty('diet_status') || $user->transition_started_on === null) {
+                $user->transition_started_on = now('Europe/Paris')->toDateString();
+            }
+        }
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,8 +34,9 @@ class ProfileController extends Controller
             'profile' => [
                 ...$user->only(['name', 'sex', 'diet_status', 'protein_target_g', 'iron_target_mg',
                     'b12_target_ug', 'calcium_target_mg', 'zinc_target_mg']),
-                'transition_weeks' => $user->transition_started_on
-                    ? max(0, (int) $user->transition_started_on->diffInWeeks(now())) : null,
+                'transition_days' => $user->diet_status === 'transition' && $user->transition_started_on
+                    ? max(0, (int) Carbon::parse($user->transition_started_on->toDateString(), 'Europe/Paris')
+                        ->diffInDays(Carbon::today('Europe/Paris'))) : null,
             ],
             'weights' => $weights->map(fn ($entry) => [
                 'id' => $entry->id,

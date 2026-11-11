@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import MobileLayout from '@/layouts/mobile-layout';
 import { Link, useForm } from '@inertiajs/react';
-import { Bluetooth, Plus, Settings } from 'lucide-react';
+import { Bluetooth, Pencil, Plus, Settings } from 'lucide-react';
 import { useState } from 'react';
 
 type WeightEntry = { id: number; weight_kg: number; recorded_at: string };
@@ -12,7 +12,7 @@ type ProfileData = {
     name: string;
     sex: string | null;
     diet_status: string | null;
-    transition_weeks: number | null;
+    transition_days: number | null;
     protein_target_g: string | null;
     iron_target_mg: string | null;
     b12_target_ug: string | null;
@@ -26,14 +26,14 @@ const date = (value: string) => new Date(value).toLocaleDateString('fr-FR', { da
 export default function Profile({ profile, weights }: { profile: ProfileData; weights: WeightEntry[] }) {
     const latest = weights.at(-1);
     const diet = profile.diet_status === 'vegetarian' ? 'Végétarien' : profile.diet_status === 'transition' ? 'En conversion' : 'Non renseigné';
-    const weeks = profile.transition_weeks;
+    const days = profile.transition_days;
     const subtitle =
-        profile.diet_status === 'transition' && weeks !== null
-            ? weeks === 0
+        profile.diet_status === 'transition' && days !== null
+            ? days === 0
                 ? 'Ta transition végé commence !'
-                : `En transition végé depuis ${weeks} semaine${weeks > 1 ? 's' : ''}`
+                : `En transition végé depuis ${days} jour${days > 1 ? 's' : ''}`
             : profile.diet_status === 'vegetarian'
-              ? 'Une alimentation végétarienne au quotidien'
+              ? 'Végétarien au quotidien !'
               : 'Ton profil, à ton rythme';
     const targets = [
         { label: 'Protéines', value: profile.protein_target_g, unit: 'g' },
@@ -75,7 +75,15 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                         <dt className="text-[10px] text-neutral-500">{label}</dt>
                         <dd className="mt-0.5 text-xs font-semibold">
                             {value}
-                            {label === 'Poids' && <WeightEditor currentWeight={latest?.weight_kg} />}
+                            {label === 'Poids' && (
+                                <>
+                                    <span className="mt-1 flex items-center gap-1 text-[10px] font-normal text-brand">
+                                        <Pencil className="size-3" aria-hidden="true" />
+                                        Modifier
+                                    </span>
+                                    <WeightEditor currentWeight={latest?.weight_kg} />
+                                </>
+                            )}
                         </dd>
                     </div>
                 ))}
@@ -104,7 +112,10 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                 </h2>
                 <Dialog>
                     <DialogTrigger asChild>
-                        <button type="button" className="flex w-full items-center gap-3 rounded-[20px] border border-neutral-200 px-3 py-3 text-left hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-brand">
+                        <button
+                            type="button"
+                            className="focus-visible:outline-brand flex w-full items-center gap-3 rounded-[20px] border border-neutral-200 px-3 py-3 text-left hover:bg-neutral-50 focus-visible:outline-2"
+                        >
                             <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl">
                                 <img src="/image/Balance_sansbol.svg" alt="" className="size-full" aria-hidden="true" />
                             </span>
@@ -123,7 +134,7 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                         <DialogDescription className="text-center text-neutral-600">
                             Allume ta balance et garde-la près de ton téléphone pour l’appairer en Bluetooth.
                         </DialogDescription>
-                        <Button type="button" className="h-12 rounded-full bg-brand text-white hover:bg-brand/90">
+                        <Button type="button" className="bg-brand hover:bg-brand/90 h-12 rounded-full text-white">
                             <Bluetooth className="size-4" aria-hidden="true" />
                             Appairer en Bluetooth
                         </Button>
@@ -145,9 +156,9 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                             </span>
                         </button>
                     </DialogTrigger>
-                    <DialogContent className="w-[calc(100%_-_2rem)] max-w-sm rounded-3xl">
+                    <DialogContent className="w-[calc(100%_-_2rem)] max-w-sm rounded-3xl border-neutral-200 bg-white text-black">
                         <DialogTitle>Connecter une balance</DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-black">
                             La connexion à un compte Withings sera disponible prochainement. Tes pesées déjà enregistrées restent visibles sur ton
                             profil.
                         </DialogDescription>
@@ -194,7 +205,9 @@ function WeightEditor({ currentWeight }: { currentWeight?: number }) {
             </DialogTrigger>
             <DialogContent className="w-[calc(100%_-_2rem)] max-w-sm rounded-3xl border-neutral-200 bg-white text-black">
                 <DialogTitle>Mettre à jour ton poids</DialogTitle>
-                <DialogDescription className="text-black">Cette pesée sera ajoutée à ton historique à la date et à l’heure de l’enregistrement.</DialogDescription>
+                <DialogDescription className="text-black">
+                    Cette pesée sera ajoutée à ton historique à la date et à l’heure de l’enregistrement.
+                </DialogDescription>
                 <form
                     className="grid gap-5"
                     onSubmit={(event) => {
@@ -238,7 +251,13 @@ function WeightEditor({ currentWeight }: { currentWeight?: number }) {
                         <InputError id="profile-weight-error" message={errors.weight_kg} />
                     </fieldset>
                     <div className="flex gap-2">
-                        <Button type="button" variant="outline" disabled={processing} onClick={() => setOpen(false)} className="flex-1 rounded-full border-neutral-200 bg-white text-black hover:bg-neutral-100 hover:text-black">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={processing}
+                            onClick={() => setOpen(false)}
+                            className="flex-1 rounded-full border-neutral-200 bg-white text-black hover:bg-neutral-100 hover:text-black"
+                        >
                             Annuler
                         </Button>
                         <Button type="submit" disabled={processing} className="bg-brand hover:bg-brand/90 flex-1 rounded-full text-white">
