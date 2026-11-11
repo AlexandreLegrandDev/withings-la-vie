@@ -19,13 +19,20 @@ class MealController extends Controller
     /** Page Repas : les 4 repas du jour, avec l'id de ceux qui existent déjà en base (null sinon). */
     public function index(Request $request): Response
     {
-        $ids = $request->user()->meals()
+        $meals = $request->user()->meals()
             ->whereDate('meal_date', $this->today())
-            ->pluck('id', 'type');
+            ->get(['id', 'type', 'created_at', 'finished_at'])
+            ->keyBy('type');
 
         return Inertia::render('meals', [
             // Ex. { breakfast: 12, lunch: null, snack: null, dinner: null }
-            'mealIds' => collect(Meal::TYPES)->mapWithKeys(fn ($type) => [$type => $ids[$type] ?? null]),
+            'mealIds' => collect(Meal::TYPES)->mapWithKeys(fn ($type) => [$type => $meals->get($type)?->id]),
+            'mealDates' => collect(Meal::TYPES)->mapWithKeys(fn ($type) => [
+                $type => [
+                    'created_at' => $meals->get($type)?->created_at,
+                    'finished_at' => $meals->get($type)?->finished_at,
+                ],
+            ]),
         ]);
     }
 

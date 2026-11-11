@@ -223,7 +223,7 @@ export default function Register() {
                                 label="Poids"
                                 min={1}
                                 max={250}
-                                step={0.1}
+                                step={1}
                                 unit="kg"
                                 value={data.weight_kg}
                                 onChange={(value) => setData('weight_kg', value)}

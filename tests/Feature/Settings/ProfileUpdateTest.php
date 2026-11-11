@@ -10,6 +10,47 @@ class ProfileUpdateTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_becoming_vegetarian_clears_the_transition_date(): void
+    {
+        $user = User::factory()->create([
+            'diet_status' => 'transition',
+            'transition_started_on' => now()->subDays(10)->toDateString(),
+        ]);
+
+        $this->actingAs($user)->patch('/settings/profile', [
+            'name' => $user->name, 'email' => $user->email, 'diet_status' => 'vegetarian',
+        ])->assertSessionHasNoErrors()->assertRedirect('/settings/profile');
+
+        $this->assertSame('vegetarian', $user->fresh()->diet_status);
+        $this->assertNull($user->fresh()->transition_started_on);
+    }
+
+    public function test_starting_transition_sets_today_and_subsequent_saves_preserve_it(): void
+    {
+        $this->travelTo(now()->startOfSecond());
+        $user = User::factory()->create(['diet_status' => 'vegetarian']);
+        $payload = ['name' => $user->name, 'email' => $user->email, 'diet_status' => 'transition'];
+        $startedOn = now('Europe/Paris')->toDateString();
+
+        $this->actingAs($user)->patch('/settings/profile', $payload)->assertSessionHasNoErrors();
+        $this->assertSame($startedOn, $user->fresh()->transition_started_on->toDateString());
+
+        $this->travel(3)->days();
+        $this->patch('/settings/profile', $payload)->assertSessionHasNoErrors();
+        $this->assertSame($startedOn, $user->fresh()->transition_started_on->toDateString());
+        $this->get('/profil')->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->where('profile.transition_days', 3));
+    }
+
+    public function test_unknown_diet_status_is_rejected(): void
+    {
+        $user = User::factory()->create(['diet_status' => 'vegetarian']);
+        $this->actingAs($user)->patch('/settings/profile', [
+            'name' => $user->name, 'email' => $user->email, 'diet_status' => 'unknown',
+        ])->assertSessionHasErrors('diet_status');
+        $this->assertSame('vegetarian', $user->fresh()->diet_status);
+    }
+
     public function test_profile_page_is_displayed()
     {
         $user = User::factory()->create();

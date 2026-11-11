@@ -11,12 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SettingsLayout from '@/layouts/settings/layout';
 
-export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
+export default function Profile({ mustVerifyEmail, status, dietStatus }: { mustVerifyEmail: boolean; status?: string; dietStatus: string | null }) {
     const { auth } = usePage<SharedData>().props;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: auth.user.name,
         email: auth.user.email,
+        diet_status: dietStatus ?? '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -58,6 +59,23 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             placeholder="Adresse email"
                         />
                         <InputError message={errors.email} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="diet_status">Régime alimentaire</Label>
+                        <select
+                            id="diet_status"
+                            value={data.diet_status}
+                            onChange={(event) => setData('diet_status', event.target.value)}
+                            className="h-12 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-black"
+                        >
+                            <option value="" disabled>
+                                Choisir un régime
+                            </option>
+                            <option value="transition">En transition</option>
+                            <option value="vegetarian">Végétarien</option>
+                        </select>
+                        <InputError message={errors.diet_status} />
                     </div>
 
                     {mustVerifyEmail && auth.user.email_verified_at === null && (
