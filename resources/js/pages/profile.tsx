@@ -1,7 +1,10 @@
+import InputError from '@/components/input-error';
+import { MeasurementSlider } from '@/components/measurement-slider';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import MobileLayout from '@/layouts/mobile-layout';
-import { Link } from '@inertiajs/react';
-import { Plus, Scale, Settings } from 'lucide-react';
+import { Link, useForm } from '@inertiajs/react';
+import { Bluetooth, Plus, Settings } from 'lucide-react';
 import { useState } from 'react';
 
 type WeightEntry = { id: number; weight_kg: number; recorded_at: string };
@@ -68,9 +71,12 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                     { label: 'Poids', value: latest ? `${number(latest.weight_kg)} kg` : 'Non renseigné' },
                     { label: 'Régime', value: diet },
                 ].map(({ label, value }) => (
-                    <div key={label} className="rounded-[20px] bg-[#f4f4f6] px-3 py-3">
+                    <div key={label} className="relative rounded-[20px] bg-[#f4f4f6] px-3 py-3">
                         <dt className="text-[10px] text-neutral-500">{label}</dt>
-                        <dd className="mt-0.5 text-xs font-semibold">{value}</dd>
+                        <dd className="mt-0.5 text-xs font-semibold">
+                            {value}
+                            {label === 'Poids' && <WeightEditor currentWeight={latest?.weight_kg} />}
+                        </dd>
                     </div>
                 ))}
             </dl>
@@ -96,16 +102,34 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                 <h2 id="devices-title" className="mb-2 text-sm font-semibold">
                     Appareils
                 </h2>
-                <div className="flex items-center gap-3 rounded-[20px] border border-neutral-200 px-3 py-3">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#d9ecfa]">
-                        <Scale className="size-5" aria-hidden="true" />
-                    </span>
-                    <div className="flex-1">
-                        <p className="text-xs font-semibold">Balance de cuisine Withings</p>
-                        <p className="mt-0.5 text-[10px] text-neutral-500">Aucune balance connectée</p>
-                    </div>
-                    <span className="size-2 shrink-0 rounded-full bg-neutral-300" aria-hidden="true" />
-                </div>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <button type="button" className="flex w-full items-center gap-3 rounded-[20px] border border-neutral-200 px-3 py-3 text-left hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-brand">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl">
+                                <img src="/image/Balance_sansbol.svg" alt="" className="size-full" aria-hidden="true" />
+                            </span>
+                            <span className="flex-1">
+                                <span className="block text-xs font-semibold">Balance de cuisine Withings</span>
+                                <span className="mt-0.5 block text-[10px] text-neutral-500">Aucune balance connectée</span>
+                            </span>
+                            <Bluetooth className="size-4 shrink-0 text-neutral-500" aria-hidden="true" />
+                        </button>
+                    </DialogTrigger>
+                    <DialogContent className="w-[calc(100%_-_2rem)] max-w-sm rounded-3xl border-neutral-200 bg-white text-black">
+                        <div className="mx-auto flex size-28 items-center justify-center rounded-3xl bg-[#d9ecfa] p-5">
+                            <img src="/image/Balance_sansbol.svg" alt="" className="size-full" />
+                        </div>
+                        <DialogTitle className="text-center">Connecter ta balance de cuisine</DialogTitle>
+                        <DialogDescription className="text-center text-neutral-600">
+                            Allume ta balance et garde-la près de ton téléphone pour l’appairer en Bluetooth.
+                        </DialogDescription>
+                        <Button type="button" className="h-12 rounded-full bg-brand text-white hover:bg-brand/90">
+                            <Bluetooth className="size-4" aria-hidden="true" />
+                            Appairer en Bluetooth
+                        </Button>
+                        <p className="text-center text-xs text-neutral-500">Démonstration : aucune connexion ne sera lancée.</p>
+                    </DialogContent>
+                </Dialog>
                 <Dialog>
                     <DialogTrigger asChild>
                         <button
@@ -142,6 +166,88 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                 Se déconnecter
             </Link>
         </MobileLayout>
+    );
+}
+
+function WeightEditor({ currentWeight }: { currentWeight?: number }) {
+    const [open, setOpen] = useState(false);
+    const { data, setData, post, processing, errors, clearErrors } = useForm({ weight_kg: String(currentWeight ?? 70) });
+
+    return (
+        <Dialog
+            open={open}
+            onOpenChange={(nextOpen) => {
+                if (processing) return;
+                if (nextOpen) {
+                    setData('weight_kg', String(currentWeight ?? 70));
+                    clearErrors();
+                }
+                setOpen(nextOpen);
+            }}
+        >
+            <DialogTrigger asChild>
+                <button
+                    type="button"
+                    aria-label="Modifier mon poids"
+                    className="hover:bg-brand/5 focus-visible:outline-brand absolute inset-0 rounded-[20px] focus-visible:outline-2"
+                />
+            </DialogTrigger>
+            <DialogContent className="w-[calc(100%_-_2rem)] max-w-sm rounded-3xl border-neutral-200 bg-white text-black">
+                <DialogTitle>Mettre à jour ton poids</DialogTitle>
+                <DialogDescription className="text-black">Cette pesée sera ajoutée à ton historique à la date et à l’heure de l’enregistrement.</DialogDescription>
+                <form
+                    className="grid gap-5"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        if (processing) return;
+                        post(route('profile.weight.store'), {
+                            preserveScroll: true,
+                            onSuccess: () => setOpen(false),
+                        });
+                    }}
+                >
+                    <fieldset disabled={processing} className="grid gap-3">
+                        <MeasurementSlider
+                            id="profile-weight-slider"
+                            label="Poids"
+                            value={data.weight_kg}
+                            min={1}
+                            max={250}
+                            step={1}
+                            unit="kg"
+                            onChange={(value) => setData('weight_kg', value)}
+                        />
+                        <label htmlFor="profile-weight" className="text-xs text-black">
+                            Poids exact (kg)
+                        </label>
+                        <input
+                            id="profile-weight"
+                            name="weight_kg"
+                            type="number"
+                            inputMode="decimal"
+                            min="0.01"
+                            max="500"
+                            step="0.01"
+                            required
+                            value={data.weight_kg}
+                            onChange={(event) => setData('weight_kg', event.target.value)}
+                            aria-invalid={Boolean(errors.weight_kg)}
+                            aria-describedby={errors.weight_kg ? 'profile-weight-error' : undefined}
+                            className="focus-visible:outline-brand h-12 w-full rounded-full border border-neutral-200 bg-white px-4 text-sm text-black [color-scheme:light]"
+                        />
+                        <InputError id="profile-weight-error" message={errors.weight_kg} />
+                    </fieldset>
+                    <div className="flex gap-2">
+                        <Button type="button" variant="outline" disabled={processing} onClick={() => setOpen(false)} className="flex-1 rounded-full border-neutral-200 bg-white text-black hover:bg-neutral-100 hover:text-black">
+                            Annuler
+                        </Button>
+                        <Button type="submit" disabled={processing} className="bg-brand hover:bg-brand/90 flex-1 rounded-full text-white">
+                            {processing ? 'Enregistrement…' : 'Enregistrer'}
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
 

@@ -17,6 +17,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('repas/{meal}', [MealController::class, 'show'])->whereNumber('meal')->name('meals.show');
     Route::inertia('suivi', 'tracking')->name('tracking');
     Route::get('profil', [ProfileController::class, 'index'])->name('profile');
+    Route::post('profil/poids', [ProfileController::class, 'storeWeight'])->name('profile.weight.store');
 
     // Le starter kit redirige vers « dashboard » après la connexion : on renvoie vers l'accueil.
     Route::redirect('dashboard', '/')->name('dashboard');
