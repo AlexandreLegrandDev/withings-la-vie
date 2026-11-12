@@ -141,8 +141,6 @@ export default function MealShow({ meal, intake, dayMissing, items, suggestions 
                 {intake.hasUnknownNutrients && ' Certains apports sont inconnus : seules les valeurs du catalogue sont comptées.'}
             </p>
 
-            {editable && <SuggestionsCard mealId={meal.id} dayMissing={dayMissing} suggestions={suggestions} />}
-
             <section className="mt-6">
                 <h2 className="text-base font-bold">Dans l'assiette</h2>
                 {items.length === 0 ? (
@@ -166,6 +164,8 @@ export default function MealShow({ meal, intake, dayMissing, items, suggestions 
                     Ajouter un aliment
                 </Link>
             )}
+
+            {editable && <SuggestionsCard mealId={meal.id} dayMissing={dayMissing} suggestions={suggestions} />}
         </MobileLayout>
     );
 }
