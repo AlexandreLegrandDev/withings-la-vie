@@ -1,3 +1,4 @@
+import { AnimatedNumber } from '@/components/animated-number';
 import { Plate } from '@/components/meal-card';
 import { NutrientBar } from '@/components/nutrient-bar';
 import { ProgressRing } from '@/components/progress-ring';
@@ -55,7 +56,7 @@ export default function Today({ date, intake, currentMeal }: TodayProps) {
                 </div>
 
                 {/* justify-evenly : les barres se répartissent dans la hauteur disponible */}
-                <ul className="mt-2 flex flex-1 flex-col justify-evenly gap-[clamp(0.5rem,1.6vh,1rem)]">
+                <ul className="stagger mt-2 flex flex-1 flex-col justify-evenly gap-[clamp(0.5rem,1.6vh,1rem)]">
                     {intake.nutrients.map(({ key, ...nutrient }) => (
                         <NutrientBar key={key} {...nutrient} />
                     ))}
@@ -103,7 +104,9 @@ function DayCard({ percent, missing }: { percent: number; missing: string[] }) {
 
             {/* Taille du rond : suit la hauteur de l'écran, entre 80 et 112 px */}
             <ProgressRing percent={percent} className="size-[clamp(5rem,13vh,7rem)]" label={`${percent} % des besoins du jour`}>
-                <span className="text-[clamp(1.25rem,3.4vh,1.5rem)] leading-none font-semibold">{percent}%</span>
+                <span className="text-[clamp(1.25rem,3.4vh,1.5rem)] leading-none font-semibold">
+                    <AnimatedNumber value={percent} />%
+                </span>
                 <span className="text-muted-foreground mt-0.5 text-xs">du jour</span>
             </ProgressRing>
 

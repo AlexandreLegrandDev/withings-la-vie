@@ -19,7 +19,8 @@ export default function MobileLayout({ title, backHref, className, children }: M
         <div className="bg-background text-foreground min-h-screen">
             <Head title={title} />
             {/* pb-32 : laisse la place au menu fixé en bas pour ne pas cacher le contenu */}
-            <main className={cn('mx-auto max-w-md px-4 pt-8 pb-32', className)}>
+            {/* stagger : les blocs de la page apparaissent l'un après l'autre (resources/css/app.css) */}
+            <main className={cn('stagger mx-auto max-w-md px-4 pt-8 pb-32', className)}>
                 {backHref && (
                     <header className="mb-6 flex items-center gap-2">
                         <Link

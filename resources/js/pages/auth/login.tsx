@@ -34,11 +34,11 @@ export default function Login({ status }: { status?: string }) {
         <AuthLayout>
             <Head title="Connexion" />
 
-            {/* Mascotte Tofu sur le blob rose, avec deux étoiles jaunes */}
+            {/* Mascotte Bacon sur le blob rose, avec deux étoiles jaunes */}
             <div className="relative mx-auto w-[62%]">
                 <Sparkle className="fill-butter text-butter absolute -top-2 left-0 size-5" />
                 <Sparkle className="fill-butter text-butter absolute top-2 -right-2 size-6" />
-                <Mascot src="/image/mascotte-tofu.png" alt="Tofu, la mascotte de Veggings" color="bg-brand" />
+                <Mascot src="/image/Bacon.svg" alt="Bacon, la mascotte de Veggings" color="bg-brand" />
             </div>
 
             <h1 className="mt-8 text-center text-[clamp(1.6rem,7.5vw,2rem)] font-semibold tracking-tight">

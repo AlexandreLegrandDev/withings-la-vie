@@ -147,7 +147,7 @@ export default function AddFood({ meal, suggestions, foods, preselected }: AddFo
                             <h2 className="text-base font-bold">Suggérés pour ton {mealLabels[meal.type].toLowerCase()}</h2>
                             <p className="text-muted-foreground text-sm">Ce qui manque le plus à ta journée</p>
                             {/* Cartes qui défilent à l'horizontale ; -mx-4 px-4 : elles vont jusqu'au bord de l'écran */}
-                            <ul className="-mx-4 mt-2 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
+                            <ul className="stagger -mx-4 mt-2 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
                                 {suggestions.map((suggestion, index) => (
                                     <li key={suggestion.key} className="snap-start">
                                         <button
@@ -175,7 +175,7 @@ export default function AddFood({ meal, suggestions, foods, preselected }: AddFo
                             {visibleFoods.length} {plural(visibleFoods.length, 'aliment trouvé', 'aliments trouvés')}
                         </p>
 
-                        <ul className="divide-border mt-1 divide-y">
+                        <ul className="stagger divide-border mt-1 divide-y">
                             {visibleFoods.slice(0, visibleCount).map((food, index) => (
                                 <li key={food.key}>
                                     <FoodRow
@@ -255,7 +255,7 @@ function WeightForm({ mealId, foodName, food, onCancel }: { mealId: number; food
 
     return (
         <>
-            <div className="bg-mint mt-6 flex items-center gap-3 rounded-3xl p-4">
+            <div className="bg-mint animate-rise mt-6 flex items-center gap-3 rounded-3xl p-4">
                 <div className="min-w-0 flex-1">
                     <p className="text-mint-ink text-xs font-medium tracking-widest uppercase">Aliment choisi</p>
                     <p className="text-lg leading-snug font-bold">{foodName}</p>

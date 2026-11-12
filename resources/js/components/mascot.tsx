@@ -6,7 +6,7 @@ import { useState } from 'react';
 const blob = 'url(/image/blob-haikei.svg)';
 
 interface MascotProps {
-    /** Image de la mascotte, dans public/image/ (mascotte-tofu.png, mascotte-bacon.png). */
+    /** Image de la mascotte, dans public/image/ (Mascotte tofu fraise.svg, Bacon.svg). */
     src: string;
     /** Description de la mascotte pour les lecteurs d'écran. */
     alt?: string;

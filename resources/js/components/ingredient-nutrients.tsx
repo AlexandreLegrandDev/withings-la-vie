@@ -24,7 +24,7 @@ export function IngredientNutrients({
 
     return (
         <section aria-label="Apports nutritionnels de la portion">
-            <dl className="flex flex-wrap gap-2">
+            <dl className="stagger flex flex-wrap gap-2">
                 {foodNutrients.map(({ key, label, unit, color }) => {
                     const value = per100g?.[key];
                     const isEstimated = validWeight && estimated.includes(key);

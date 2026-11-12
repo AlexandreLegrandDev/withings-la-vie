@@ -1,3 +1,4 @@
+import { useGrowFrom } from '@/hooks/use-animated-value';
 import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { NutrientIntake } from '@/types';
@@ -7,7 +8,7 @@ export function OverBadge({ actualPercent, className }: { actualPercent: number;
     if (actualPercent <= 100) return null;
 
     return (
-        <span className={cn('bg-rose-soft text-rose-ink rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums', className)}>
+        <span className={cn('bg-rose-soft text-rose-ink animate-pop rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums', className)}>
             +{actualPercent - 100} %
         </span>
     );
@@ -31,6 +32,8 @@ export function NutrientBar({
         goodFrom?: number;
     }) {
     const over = actualPercent > 100;
+    // La jauge se remplit depuis 0 à l'ouverture de la page
+    const width = useGrowFrom(Math.min(100, percent), 0);
 
     return (
         <li>
@@ -57,10 +60,10 @@ export function NutrientBar({
             >
                 <div
                     className={cn(
-                        'h-full rounded-full transition-[width] duration-700',
+                        'h-full rounded-full transition-[width] duration-1000 ease-out motion-reduce:transition-none',
                         over ? 'bg-rose-ink dark:bg-brand' : goodFrom !== undefined && percent >= goodFrom ? 'bg-leaf' : 'bg-candy',
                     )}
-                    style={{ width: `${Math.min(100, percent)}%` }}
+                    style={{ width: `${width}%` }}
                 />
             </div>
         </li>
