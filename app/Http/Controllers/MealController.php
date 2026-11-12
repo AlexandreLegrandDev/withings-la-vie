@@ -4,76 +4,78 @@ namespace App\Http\Controllers;
 
 use App\Models\Meal;
 use App\Services\DailyIntake;
+use App\Services\FoodSuggester;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class MealController extends Controller
 {
-    /** Fuseau utilisé pour savoir quel jour on est (l'appli stocke en UTC, mais « aujourd'hui » est celui de la France). */
-    public const TIMEZONE = 'Europe/Paris';
-
-    /** Page Repas : les 4 repas du jour, avec l'id de ceux qui existent déjà en base (null sinon). */
-    public function index(Request $request): Response
+    /** Page Repas : les repas du jour déjà commencés, avec leur part prévue et leur part réelle de la journée. */
+    public function index(Request $request, DailyIntake $dailyIntake): Response
     {
-        $meals = $request->user()->meals()
-            ->whereDate('meal_date', $this->today())
-            ->get(['id', 'type', 'created_at', 'finished_at'])
-            ->keyBy('type');
+        $user = $request->user();
 
         return Inertia::render('meals', [
-            'kitchenScaleConnected' => $request->user()->kitchen_scale_connected,
-            // Ex. { breakfast: 12, lunch: null, snack: null, dinner: null }
-            'mealIds' => collect(Meal::TYPES)->mapWithKeys(fn ($type) => [$type => $meals->get($type)?->id]),
-            'mealDates' => collect(Meal::TYPES)->mapWithKeys(fn ($type) => [
-                $type => [
-                    'created_at' => $meals->get($type)?->created_at,
-                    'finished_at' => $meals->get($type)?->finished_at,
-                ],
-            ]),
+            'meals' => Meal::forDay($user, today()->toDateString())
+                ->map(fn (array $entry) => self::summary($entry, $dailyIntake))
+                ->values(),
+            'shares' => Meal::SHARES,
         ]);
     }
 
-    /** Clic sur un repas pas encore créé : crée le repas du jour de ce type (ou le reprend s'il existe), puis ouvre sa page. */
+    /**
+     * Clic sur un repas pas encore créé : crée le repas du jour de ce type (ou reprend celui qui existe), puis ouvre sa page.
+     * Avec « new », une collation supplémentaire est créée même s'il y en a déjà une.
+     */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'type' => ['required', Rule::in(Meal::TYPES)],
+            'new' => ['sometimes', 'boolean'],
         ]);
 
         $meals = $request->user()->meals();
-        $attributes = ['meal_date' => $this->today(), 'type' => $validated['type']];
+        $attributes = ['meal_date' => today()->toDateString(), 'type' => $validated['type']];
+        $addAnother = $validated['type'] === Meal::REPEATABLE_TYPE && ($validated['new'] ?? false);
 
-        // whereDate : retrouve le repas quel que soit le format de date stocké (« 2026-11-10 » ou « 2026-11-10 00:00:00 »)
-        $meal = $meals->clone()->whereDate('meal_date', $attributes['meal_date'])->where('type', $attributes['type'])->first()
-            ?? $meals->create($attributes);
+        $meal = $addAnother ? null : $meals->clone()
+            ->whereDate('meal_date', $attributes['meal_date'])
+            ->where('type', $attributes['type'])
+            ->orderBy('id')
+            ->first();
 
-        return to_route('meals.show', $meal);
+        return to_route('meals.show', $meal ?? $meals->create($attributes));
     }
 
     /** Page d'un repas précis (/repas/{id}). */
-    public function show(Request $request, Meal $meal, DailyIntake $dailyIntake): Response
+    public function show(Request $request, Meal $meal, DailyIntake $dailyIntake, FoodSuggester $suggester): Response
     {
-        // Un utilisateur ne peut voir que ses propres repas
         abort_unless($meal->user_id === $request->user()->id, 404);
+
+        $date = $meal->meal_date->toDateString();
+        $entry = Meal::forDay($request->user(), $date)->firstWhere('meal.id', $meal->id);
+        $day = $dailyIntake->forUser($request->user(), $date);
 
         return Inertia::render('meals/show', [
             'meal' => [
                 'id' => $meal->id,
                 'type' => $meal->type,
-                'date' => $meal->meal_date->toDateString(),
+                'number' => $entry['number'],
+                'date' => $date,
+                'isToday' => $date === today()->toDateString(),
                 'finished_at' => $meal->finished_at,
-                'share' => Meal::SHARES[$meal->type],
+                'share' => $entry['share'],
             ],
-            // Apports du repas comparés à sa part des besoins du jour (anneaux en haut de la page)
-            'intake' => $dailyIntake->forMeal($meal),
+            // Apports du repas comparés à sa part prévue (anneaux), et part réelle de la journée (dayPercent)
+            'intake' => $dailyIntake->forMeal($meal, $entry['share']),
             // Aliments déjà dans l'assiette, du plus ancien au plus récent
-            'items' => $meal->items()->oldest()->get(['id', 'food_name', 'weight_g']),
-            // Aliments proposés pour combler les manques : viendront de l'API des aliments, vide en attendant
-            'suggestions' => [],
+            'items' => $meal->items()->oldest()->get(['id', 'food_key', 'food_name', 'weight_g']),
+            // Nutriments les moins couverts de la journée, et aliments qui les comblent
+            'dayMissing' => $day['missing'],
+            'suggestions' => $suggester->forIntake($day),
         ]);
     }
 
@@ -87,8 +89,19 @@ class MealController extends Controller
         return to_route('meals');
     }
 
-    private function today(): string
+    /** Résumé d'un repas pour les listes (page Repas, bilan d'un jour). */
+    public static function summary(array $entry, DailyIntake $dailyIntake): array
     {
-        return Carbon::today(self::TIMEZONE)->toDateString();
+        /** @var Meal $meal */
+        $meal = $entry['meal'];
+
+        return [
+            'id' => $meal->id,
+            'type' => $meal->type,
+            'number' => $entry['number'],
+            'status' => $meal->finished_at ? 'done' : 'in_progress',
+            'share' => $entry['share'],
+            'dayPercent' => $dailyIntake->dayPercent($meal, $meal->user),
+        ];
     }
 }

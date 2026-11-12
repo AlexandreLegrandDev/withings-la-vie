@@ -2,55 +2,31 @@
 
 use App\Http\Controllers\MealController;
 use App\Http\Controllers\MealItemController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TodayController;
 use App\Http\Controllers\TrackingController;
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-// Les pages de l'appli, réservées aux utilisateurs connectés.
-// Route::inertia(URL, page React) affiche resources/js/pages/<page>.tsx.
-// Quand une page aura besoin de données, on passera à Route::get(...) + Inertia::render(page, [données]).
-Route::middleware(['auth'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('/', [TodayController::class, 'index'])->name('today');
     Route::get('bilan', [TodayController::class, 'summary'])->name('today.summary');
-    // Repas : la liste du jour, la création d'un repas au clic sur sa carte, et la page d'un repas (/repas/12)
+
     Route::get('repas', [MealController::class, 'index'])->name('meals');
     Route::post('repas', [MealController::class, 'store'])->name('meals.store');
     Route::get('repas/{meal}', [MealController::class, 'show'])->whereNumber('meal')->name('meals.show');
-    // Suivi : ?periode=mois pour la vue du mois (semaine par défaut)
+    Route::post('repas/{meal}/terminer', [MealController::class, 'finish'])->name('meals.finish');
+
+    Route::get('repas/{meal}/ingredients/ajouter', [MealItemController::class, 'create'])->name('meals.items.create');
+    Route::post('repas/{meal}/ingredients', [MealItemController::class, 'store'])->name('meals.items.store');
+    Route::patch('repas/{meal}/ingredients/{item}', [MealItemController::class, 'update'])->name('meals.items.update');
+    Route::delete('repas/{meal}/ingredients/{item}', [MealItemController::class, 'destroy'])->name('meals.items.destroy');
+
     Route::get('suivi', [TrackingController::class, 'index'])->name('tracking');
+
     Route::get('profil', [ProfileController::class, 'index'])->name('profile');
     Route::post('profil/poids', [ProfileController::class, 'storeWeight'])->name('profile.weight.store');
     Route::post('profil/balance-cuisine/connecter', [ProfileController::class, 'connectKitchenScale'])->name('profile.kitchen-scale.connect');
     Route::post('profil/balance-cuisine/deconnecter', [ProfileController::class, 'disconnectKitchenScale'])->name('profile.kitchen-scale.disconnect');
-
-    // Le starter kit redirige vers « dashboard » après la connexion : on renvoie vers l'accueil.
-    Route::redirect('dashboard', '/')->name('dashboard');
-
-    // Routes pour l'ajout d'un repas et d'un ingrédient dans ce repas
-    Route::post('/repas', [MealController::class, 'store'])
-    ->name('meals.store');
-
-    Route::get('/repas/{meal}', [MealController::class, 'show'])
-        ->name('meals.show');
-
-    // Page « Choisir un aliment »
-    Route::get('/repas/{meal}/ingredients/ajouter', [MealItemController::class, 'create'])
-        ->name('meals.items.create');
-
-    Route::post('/repas/{meal}/ingredients', [MealItemController::class, 'store'])
-        ->name('meals.items.store');
-
-    Route::patch('/repas/{meal}/ingredients/{item}', [MealItemController::class, 'update'])
-        ->name('meals.items.update');
-
-    Route::delete('/repas/{meal}/ingredients/{item}', [MealItemController::class, 'destroy'])
-        ->name('meals.items.destroy');
-
-    Route::post('/repas/{meal}/terminer', [MealController::class, 'finish'])
-        ->name('meals.finish');
-
 });
 
 require __DIR__.'/settings.php';

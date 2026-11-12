@@ -17,7 +17,8 @@ export function BottomNav() {
     return (
         <nav className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-[4%]">
             {/* env(safe-area-inset-bottom) : hauteur de la barre d'accueil des iPhone, pour ne pas passer dessous */}
-            <div className="bg-night w-full max-w-md rounded-full p-[1.5%] shadow-lg">
+            {/* Barre foncée dans les deux thèmes ; en thème sombre, un fin contour la détache du fond */}
+            <div className="bg-night w-full max-w-md rounded-full p-[1.5%] shadow-lg dark:ring-1 dark:ring-white/10">
                 <ul className="relative flex">
                     {/* La bulle rose : un seul élément, large de 25 %, qu'on fait glisser.
                         translateX(100 %) = décalage d'une fois sa propre largeur, donc d'un bouton.
@@ -46,7 +47,7 @@ export function BottomNav() {
                                     aria-current={index === currentIndex ? 'page' : undefined}
                                     className={cn(
                                         // clamp(min, idéal, max) : le texte suit la largeur de l'écran (vw) sans devenir trop petit ni trop grand.
-                                        'flex w-full flex-col items-center gap-1 rounded-full px-[8%] py-2 text-[clamp(0.625rem,3vw,0.75rem)] font-medium transition-colors duration-300',
+                                        'flex w-full flex-col items-center gap-1 rounded-full px-[8%] py-2 text-[clamp(0.6875rem,3.2vw,0.8125rem)] font-medium transition-colors duration-300',
                                         active ? 'text-white' : 'text-neutral-400 hover:text-white',
                                     )}
                                 >

@@ -1,7 +1,6 @@
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/react';
-import { configureEcho } from '@laravel/echo-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { ComponentType, ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -9,10 +8,6 @@ import { registerSW } from 'virtual:pwa-register';
 import { route as routeFn } from 'ziggy-js';
 import { initializeTheme } from './hooks/use-appearance';
 import NavLayout from './layouts/nav-layout';
-
-configureEcho({
-    broadcaster: 'reverb',
-});
 
 declare global {
     const route: typeof routeFn;
@@ -37,12 +32,13 @@ createInertiaApp({
 
         root.render(<App {...props} />);
     },
+    // Barre de chargement entre deux pages, à la couleur de l'appli
     progress: {
-        color: '#4B5563',
+        color: '#e33d81',
     },
 });
 
-// This will set light / dark mode on load...
+// Thème clair / sombre choisi dans Paramètres → Apparence
 initializeTheme();
 
 // PWA : enregistre le service worker (/sw.js) ; il se met à jour tout seul après chaque déploiement

@@ -49,15 +49,18 @@ class TrackingTest extends TestCase
             ->where('start', '2026-11-09')
             ->where('end', '2026-11-15')
             ->has('bars', 7)
-            ->where('bars.0', ['label' => 'L', 'value' => 100, 'current' => false])
+            ->where('bars.0', ['label' => 'L', 'date' => '2026-11-09', 'value' => 100, 'current' => false])
+            ->where('bars.1.value', 0)  // mardi : rien de noté
             ->where('bars.2.value', 25)
             ->where('bars.3.current', true)
             ->where('bars.4.value', null) // vendredi : à venir
-            // Lundi 100, mardi 0, mercredi 25, jeudi 0 → 31
-            ->where('average', 31)
+            // Les jours à 0 % (mardi, jeudi) ne comptent pas : (100 + 25) / 2
+            ->where('average', 63)
             ->where('nutrients.0.key', 'protein')
-            ->where('nutrients.0.percent', 38) // protéines : (100 + 0 + 50 + 0) / 4
-            ->where('nutrients.1.percent', 25)
+            ->where('nutrients.0.percent', 75) // protéines : (100 + 50) / 2
+            ->where('nutrients.1.percent', 50)
+            ->where('previousDate', '2026-11-02')
+            ->where('nextDate', null)
             // Mercredi suivi, rien jeudi : la série en cours compte encore 1 jour
             ->where('streak', 1)
         );
@@ -72,7 +75,8 @@ class TrackingTest extends TestCase
             // Novembre 2026 : dim. 1, puis 2–8, 9–15, 16–22, 23–29, lun. 30
             ->has('bars', 6)
             ->where('bars.0.label', '1')
-            ->where('bars.2', ['label' => '9–15', 'value' => 0, 'current' => true])
+            ->where('bars.2', ['label' => '9–15', 'date' => '2026-11-09', 'value' => 0, 'current' => true])
+            ->where('average', null)
             ->where('bars.3.value', null)
         );
     }
@@ -85,5 +89,39 @@ class TrackingTest extends TestCase
         }
 
         $this->actingAs($user)->get('/suivi')->assertInertia(fn (Assert $page) => $page->where('streak', 3));
+    }
+
+    public function test_a_past_week_can_be_opened()
+    {
+        $user = $this->user();
+        $this->meal($user, '2026-11-03', ['protein_total_g' => 50, 'b12_total_ug' => 4]);
+
+        $this->actingAs($user)->get('/suivi?date=2026-11-04')->assertInertia(fn (Assert $page) => $page
+            ->where('start', '2026-11-02')
+            ->where('bars.1.value', 100)
+            ->where('bars.6.value', 0) // dimanche passé, pas « à venir »
+            ->where('average', 100)
+            ->where('nextDate', '2026-11-09')
+        );
+
+        $this->get('/suivi?date=2026-12-01')->assertSessionHasErrors('date');
+    }
+
+    public function test_day_summary_can_show_a_past_day_with_its_meals()
+    {
+        $user = $this->user();
+        $this->meal($user, '2026-11-10', ['protein_total_g' => 25, 'b12_total_ug' => 4]);
+
+        $this->actingAs($user)->get('/bilan?date=2026-11-10')->assertInertia(fn (Assert $page) => $page
+            ->component('day-summary')
+            ->where('date', '2026-11-10')
+            ->where('isToday', false)
+            ->where('intake.percent', 75)
+            ->has('meals', 1)
+            ->where('meals.0.type', 'lunch')
+            ->where('meals.0.dayPercent', 75)
+        );
+
+        $this->get('/bilan?date=2026-11-20')->assertSessionHasErrors('date');
     }
 }

@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
 
 interface ProgressRingProps {
-    /** Avancement de 0 à 100. */
+    /** Avancement de 0 à 100 (au-delà, l'anneau reste plein et passe en rose foncé). */
     percent: number;
     /** Taille du rond (classe Tailwind, ex. « size-12 »). */
     className?: string;
@@ -10,6 +10,8 @@ interface ProgressRingProps {
     trackClassName?: string;
     /** Épaisseur du trait, sur une base de 100. */
     strokeWidth?: number;
+    /** Objectif dépassé : anneau plus foncé, pour signaler la surconsommation. */
+    over?: boolean;
     label: string;
     /** Ce qu'on affiche au centre. */
     children?: ReactNode;
@@ -19,13 +21,15 @@ interface ProgressRingProps {
 export function ProgressRing({
     percent,
     className,
-    trackClassName = 'stroke-white fill-white',
+    trackClassName = 'stroke-card fill-card',
     strokeWidth = 10,
+    over = false,
     label,
     children,
 }: ProgressRingProps) {
     const radius = 50 - strokeWidth / 2;
     const circumference = 2 * Math.PI * radius;
+    const filled = Math.min(100, Math.max(0, percent));
 
     return (
         <div className={cn('relative shrink-0', className)} role="img" aria-label={label}>
@@ -36,12 +40,11 @@ export function ProgressRing({
                     cy="50"
                     r={radius}
                     fill="none"
-                    stroke="var(--color-brand)"
                     strokeWidth={strokeWidth}
-                    strokeLinecap={percent > 0 && percent < 100 ? 'round' : 'butt'}
+                    strokeLinecap={filled > 0 && filled < 100 ? 'round' : 'butt'}
                     strokeDasharray={circumference}
-                    strokeDashoffset={circumference * (1 - percent / 100)}
-                    className="transition-[stroke-dashoffset] duration-700"
+                    strokeDashoffset={circumference * (1 - filled / 100)}
+                    className={cn('transition-[stroke-dashoffset] duration-700', over ? 'stroke-rose-ink' : 'stroke-brand')}
                 />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">{children}</div>

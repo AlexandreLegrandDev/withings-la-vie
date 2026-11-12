@@ -7,11 +7,8 @@ use App\Models\User;
 use Carbon\CarbonPeriod;
 
 /**
- * Bilan des apports d'une journée : ce qui a été mangé (somme des totaux des repas du jour)
- * comparé aux besoins calculés à l'inscription (colonnes *_target des users).
- *
- * Les totaux d'un repas (meals.protein_total_g, etc.) seront remplis par la page d'un repas
- * quand on pèsera les aliments : ce bilan se met alors à jour tout seul.
+ * Bilan des apports : ce qui a été mangé (somme des totaux des repas) comparé
+ * aux besoins de l'utilisateur (colonnes *_target des users).
  */
 class DailyIntake
 {
@@ -30,17 +27,15 @@ class DailyIntake
     ];
 
     /**
-     * @return array{
-     *     percent: int,
-     *     nutrients: list<array{key: string, label: string, unit: string, eaten: float, target: float, percent: int}>,
-     *     missing: list<string>
-     * }
+     * Bilan d'une journée (AAAA-MM-JJ).
+     *
+     * @return array{percent: int, nutrients: list<array<string, mixed>>, missing: list<string>}
      */
     public function forUser(User $user, string $date): array
     {
         $totals = $user->meals()
             ->whereDate('meal_date', $date)
-            ->selectRaw(collect(self::NUTRIENTS)->map(fn ($n) => "COALESCE(SUM({$n[1]}), 0) as {$n[1]}")->join(', '))
+            ->selectRaw($this->sums())
             ->first();
 
         return $this->compare($totals, $user);
@@ -48,19 +43,17 @@ class DailyIntake
 
     /**
      * Bilan de chaque jour entre $from et $to inclus (AAAA-MM-JJ), en une seule requête.
-     * Un jour sans repas compte comme 0 %.
+     * Un jour sans repas vaut 0 %.
      *
      * @return array<string, array{percent: int, nutrients: list<array<string, mixed>>, missing: list<string>}> clé = date
      */
     public function forPeriod(User $user, string $from, string $to): array
     {
-        $sums = collect(self::NUTRIENTS)->map(fn ($n) => "COALESCE(SUM({$n[1]}), 0) as {$n[1]}")->join(', ');
-
         // whereDate : marche que la date soit stockée « 2026-11-10 » ou « 2026-11-10 00:00:00 »
         $totalsByDay = $user->meals()
             ->whereDate('meal_date', '>=', $from)
             ->whereDate('meal_date', '<=', $to)
-            ->selectRaw("DATE(meal_date) as day, {$sums}")
+            ->selectRaw("DATE(meal_date) as day, {$this->sums()}")
             ->groupBy('day')
             ->get()
             ->keyBy('day');
@@ -77,22 +70,39 @@ class DailyIntake
     }
 
     /**
-     * Bilan d'un seul repas, comparé à sa part des besoins du jour (ex. déjeuner = 35 % des besoins).
+     * Bilan d'un repas comparé à sa part prévue des besoins du jour (ex. déjeuner = 35 %),
+     * avec en plus « dayPercent » : la part réelle des besoins du jour apportée par ce repas.
      *
-     * @return array{percent: int, nutrients: list<array<string, mixed>>, missing: list<string>}
+     * @return array{percent: int, dayPercent: int, nutrients: list<array<string, mixed>>, missing: list<string>, hasUnknownNutrients: bool}
      */
-    public function forMeal(Meal $meal): array
+    public function forMeal(Meal $meal, float $share): array
     {
         $summary = $this->mealCalculator->calculate($meal);
+        $totals = (object) $summary['totals'];
 
         return [
-            ...$this->compare((object) $summary['totals'], $meal->user, Meal::SHARES[$meal->type] / 100),
+            ...$this->compare($totals, $meal->user, $share / 100),
+            'dayPercent' => $this->dayPercent($totals, $meal->user),
             'hasUnknownNutrients' => $summary['hasUnknownNutrients'],
         ];
     }
 
+    /** Part des besoins du jour couverte par des totaux (ceux d'un repas, par exemple), de 0 à 100. */
+    public function dayPercent(object $totals, User $user): int
+    {
+        return $this->compare($totals, $user)['percent'];
+    }
+
+    private function sums(): string
+    {
+        return collect(self::NUTRIENTS)->map(fn ($n) => "COALESCE(SUM({$n[1]}), 0) as {$n[1]}")->join(', ');
+    }
+
     /**
      * Compare des totaux (colonnes *_total) aux besoins de l'utilisateur, multipliés par $factor.
+     *
+     * « percent » est plafonné à 100 pour les moyennes (manger 2x trop de fer ne compense pas le manque de B12),
+     * « actualPercent » ne l'est pas, pour montrer un dépassement (ex. 134 %).
      *
      * @return array{percent: int, nutrients: list<array<string, mixed>>, missing: list<string>}
      */
@@ -107,7 +117,8 @@ class DailyIntake
                 continue;
             }
 
-            $eaten = (float) $totals->{$totalColumn};
+            $eaten = (float) ($totals->{$totalColumn} ?? 0);
+            $actualPercent = (int) round($eaten / $target * 100);
 
             $nutrients[] = [
                 'key' => $key,
@@ -115,12 +126,12 @@ class DailyIntake
                 'unit' => $unit,
                 'eaten' => round($eaten, 1),
                 'target' => round($target, 1),
-                // Plafonné à 100 : manger 2x trop de fer ne compense pas le manque de B12
-                'percent' => (int) min(100, round($eaten / $target * 100)),
+                'percent' => min(100, $actualPercent),
+                'actualPercent' => $actualPercent,
             ];
         }
 
-        // Avancement du jour = moyenne des pourcentages de chaque nutriment
+        // Avancement = moyenne des pourcentages (plafonnés) de chaque nutriment
         $percent = $nutrients ? (int) round(collect($nutrients)->avg('percent')) : 0;
 
         // Les 2 nutriments les plus en retard (sous 100 %), pour « Il te manque surtout du fer et de la B12 »

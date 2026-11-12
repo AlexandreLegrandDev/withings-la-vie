@@ -1,16 +1,12 @@
-import { useForm } from '@inertiajs/react';
-import { FormEventHandler, useRef } from 'react';
-
-// Components...
+import { PasswordInput } from '@/components/auth-input';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useForm } from '@inertiajs/react';
+import { useRef, type FormEventHandler } from 'react';
 
-import HeadingSmall from '@/components/heading-small';
-
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-
+/** Bloc « Supprimer mon compte » des paramètres, avec confirmation par mot de passe. */
 export default function DeleteUser() {
     const passwordInput = useRef<HTMLInputElement>(null);
     const { data, setData, delete: destroy, processing, reset, errors, clearErrors } = useForm({ password: '' });
@@ -32,61 +28,53 @@ export default function DeleteUser() {
     };
 
     return (
-        <div className="space-y-6">
-            <HeadingSmall title="Supprimer mon compte" description="Supprime ton compte et toutes tes données" />
-            <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
-                <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
-                    <p className="font-medium">Attention</p>
-                    <p className="text-sm">Cette action est définitive.</p>
-                </div>
+        <section className="bg-rose-soft mt-4 rounded-3xl p-5">
+            <h2 className="text-lg font-bold">Supprimer ton compte</h2>
+            <p className="text-rose-ink mt-1 text-sm">
+                Toutes tes données (repas, pesées, objectifs) seront supprimées. Cette action est définitive.
+            </p>
 
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button variant="destructive" className="h-12 w-full rounded-full">
-                            Supprimer mon compte
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogTitle>Supprimer définitivement ton compte ?</DialogTitle>
-                        <DialogDescription>
-                            Toutes tes données seront supprimées définitivement. Entre ton mot de passe pour confirmer.
-                        </DialogDescription>
-                        <form className="space-y-6" onSubmit={deleteUser}>
-                            <div className="grid gap-2">
-                                <Label htmlFor="password" className="sr-only">
-                                    Mot de passe
-                                </Label>
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant="destructive" className="mt-4 h-12 w-full rounded-full text-base">
+                        Supprimer mon compte
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogTitle className="pr-8 leading-snug">Supprimer définitivement ton compte ?</DialogTitle>
+                    <DialogDescription className="text-subtle">
+                        Toutes tes données seront supprimées. Entre ton mot de passe pour confirmer.
+                    </DialogDescription>
+                    <form className="grid gap-4" onSubmit={deleteUser}>
+                        <div className="grid gap-2">
+                            <Label htmlFor="delete-password" className="sr-only">
+                                Mot de passe
+                            </Label>
+                            <PasswordInput
+                                id="delete-password"
+                                name="password"
+                                ref={passwordInput}
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                                placeholder="Ton mot de passe"
+                                autoComplete="current-password"
+                            />
+                            <InputError message={errors.password} className="pl-4" />
+                        </div>
 
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    name="password"
-                                    ref={passwordInput}
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    placeholder="Mot de passe"
-                                    className="h-12"
-                                    autoComplete="current-password"
-                                />
-
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <DialogFooter>
-                                <DialogClose asChild>
-                                    <Button variant="secondary" onClick={closeModal}>
-                                        Annuler
-                                    </Button>
-                                </DialogClose>
-
-                                <Button variant="destructive" disabled={processing} asChild>
-                                    <button type="submit">Supprimer</button>
+                        <div className="flex gap-2">
+                            <DialogClose asChild>
+                                <Button type="button" variant="outline" onClick={closeModal} className="h-12 flex-1 rounded-full">
+                                    Annuler
                                 </Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
-            </div>
-        </div>
+                            </DialogClose>
+                            <Button type="submit" variant="destructive" disabled={processing} className="h-12 flex-1 rounded-full">
+                                Supprimer
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </section>
     );
 }

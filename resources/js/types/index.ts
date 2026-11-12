@@ -1,29 +1,10 @@
-import { LucideIcon } from 'lucide-react';
-
 export interface Auth {
     user: User;
 }
 
-export interface BreadcrumbItem {
-    title: string;
-    href: string;
-}
-
-export interface NavGroup {
-    title: string;
-    items: NavItem[];
-}
-
-export interface NavItem {
-    title: string;
-    url: string;
-    icon?: LucideIcon | null;
-    isActive?: boolean;
-}
-
+/** Données partagées avec toutes les pages (app/Http/Middleware/HandleInertiaRequests.php). */
 export interface SharedData {
     name: string;
-    quote: { message: string; author: string };
     auth: Auth;
     [key: string]: unknown;
 }
@@ -35,56 +16,60 @@ export interface NutrientIntake {
     unit: string;
     eaten: number;
     target: number;
-    /** Part du besoin déjà couverte, de 0 à 100. */
+    /** Part du besoin couverte, plafonnée à 100 (sert aux moyennes et à la longueur des barres). */
     percent: number;
+    /** Part réelle du besoin, sans plafond : 134 quand on a mangé 134 g pour 100 g conseillés. */
+    actualPercent: number;
 }
 
 /** Bilan d'une journée ou d'un repas (app/Services/DailyIntake.php). */
 export interface Intake {
-    /** Certains ingrédients ont des apports inconnus : les sommes peuvent être partielles. */
-    hasUnknownNutrients?: boolean;
     percent: number;
     nutrients: NutrientIntake[];
     /** Les nutriments les plus en retard, déjà avec leur article : ["du fer", "de la B12"]. */
     missing: string[];
 }
 
-/**
- * Aliment proposé pour combler les manques d'un repas.
- * Format prévu pour l'API des aliments : le serveur renvoie une liste vide en attendant.
- */
-export interface FoodSuggestion {
-    name: string;
-    /** Poids conseillé, en grammes. */
-    weight_g: number;
-    /** Ce que l'aliment apporte, déjà rédigé : « +15 g prot. · +200 mg Ca ». */
-    benefits: string;
-    /** Badge rose à côté du nom (ex. « La Vie »), facultatif. */
-    badge?: string;
+/** Bilan d'un repas : en plus, la part réelle de la journée qu'il apporte. */
+export interface MealIntake extends Intake {
+    dayPercent: number;
+    /** Certains aliments ont des apports inconnus : les sommes peuvent être partielles. */
+    hasUnknownNutrients: boolean;
 }
 
-/** Aliment du catalogue JSON (page « Choisir un aliment »). */
-export type FoodNutrients = Record<'protein_g' | 'iron_mg' | 'zinc_mg' | 'calcium_mg' | 'b12_ug', number | null>;
+/** Aliment proposé pour combler les manques de la journée (app/Services/FoodSuggester.php). */
+export interface FoodSuggestion {
+    /** Clé de l'aliment dans le catalogue. */
+    key: string;
+    name: string;
+    /** Portion proposée, en grammes. */
+    weight_g: number;
+    /** Ce que la portion apporte, déjà rédigé : « +15 g prot. · +200 mg calcium ». */
+    benefits: string;
+    /** Badge à côté du nom (ex. « La Vie »), facultatif. */
+    badge: string | null;
+}
 
+/** Champs nutritionnels du catalogue JSON, pour 100 g (null = inconnu). */
+export type FoodNutrientKey = 'protein_g' | 'iron_mg' | 'zinc_mg' | 'calcium_mg' | 'b12_ug';
+export type FoodNutrients = Record<FoodNutrientKey, number | null>;
+
+/** Aliment du catalogue JSON (page « Choisir un aliment »). */
 export interface Food {
     key: string;
     name: string;
     /** Rayon du filtre : produits La Vie ou aliments de base. */
     category: 'la_vie' | 'base';
-    /** Apports pour 100 g, déjà rédigés : « 15 g prot. · 3 mg fer /100 g ». */
-    nutrients: string;
     per100g: FoodNutrients;
-    badge?: string | null;
+    /** Nutriments dont la valeur est estimée à partir d'aliments proches (et non mesurée). */
+    estimated: FoodNutrientKey[];
+    badge: string | null;
 }
 
 export interface User {
-    kitchen_scale_connected: boolean;
     id: number;
     name: string;
     email: string;
-    avatar?: string;
-    email_verified_at: string | null;
-    created_at: string;
-    updated_at: string;
-    [key: string]: unknown; // This allows for additional properties...
+    kitchen_scale_connected: boolean;
+    [key: string]: unknown;
 }

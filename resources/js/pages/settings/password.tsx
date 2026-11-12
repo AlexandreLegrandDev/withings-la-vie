@@ -1,14 +1,13 @@
-import { Transition } from '@headlessui/react';
-import { useForm } from '@inertiajs/react';
-import { FormEventHandler, useRef } from 'react';
-
-import HeadingSmall from '@/components/heading-small';
+import { PasswordInput } from '@/components/auth-input';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import SettingsLayout from '@/layouts/settings/layout';
+import SettingsLayout, { SavedMessage, SettingsCard } from '@/layouts/settings/layout';
+import { useForm } from '@inertiajs/react';
+import { LoaderCircle } from 'lucide-react';
+import { useRef, type FormEventHandler } from 'react';
 
+/** Paramètres → Mot de passe. */
 export default function Password() {
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);
@@ -38,67 +37,39 @@ export default function Password() {
         });
     };
 
+    const fields = [
+        { id: 'current_password', label: 'Mot de passe actuel', ref: currentPasswordInput, autoComplete: 'current-password' },
+        { id: 'password', label: 'Nouveau mot de passe', ref: passwordInput, autoComplete: 'new-password' },
+        { id: 'password_confirmation', label: 'Confirme le nouveau mot de passe', ref: undefined, autoComplete: 'new-password' },
+    ] as const;
+
     return (
-        <SettingsLayout>
-            <div className="space-y-6">
-                <HeadingSmall title="Changer de mot de passe" description="Utilise un mot de passe long et difficile à deviner" />
+        <SettingsLayout title="Mot de passe">
+            <SettingsCard title="Change ton mot de passe" description="8 caractères minimum. Plus il est long, plus il est difficile à deviner.">
+                <form onSubmit={updatePassword} className="grid gap-5">
+                    {fields.map((field) => (
+                        <div key={field.id} className="grid gap-2">
+                            <Label htmlFor={field.id} className="pl-4">
+                                {field.label}
+                            </Label>
+                            <PasswordInput
+                                id={field.id}
+                                ref={field.ref}
+                                value={data[field.id]}
+                                onChange={(e) => setData(field.id, e.target.value)}
+                                autoComplete={field.autoComplete}
+                            />
+                            <InputError message={errors[field.id]} className="pl-4" />
+                        </div>
+                    ))}
 
-                <form onSubmit={updatePassword} className="space-y-5">
-                    <div className="grid gap-2">
-                        <Label htmlFor="current_password">Mot de passe actuel</Label>
-                        <Input
-                            id="current_password"
-                            ref={currentPasswordInput}
-                            value={data.current_password}
-                            onChange={(e) => setData('current_password', e.target.value)}
-                            type="password"
-                            className="h-12"
-                            autoComplete="current-password"
-                        />
-                        <InputError message={errors.current_password} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="password">Nouveau mot de passe</Label>
-                        <Input
-                            id="password"
-                            ref={passwordInput}
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                            type="password"
-                            className="h-12"
-                            autoComplete="new-password"
-                        />
-                        <InputError message={errors.password} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="password_confirmation">Confirmer le nouveau mot de passe</Label>
-                        <Input
-                            id="password_confirmation"
-                            value={data.password_confirmation}
-                            onChange={(e) => setData('password_confirmation', e.target.value)}
-                            type="password"
-                            className="h-12"
-                            autoComplete="new-password"
-                        />
-                        <InputError message={errors.password_confirmation} />
-                    </div>
-
-                    <Button disabled={processing} className="bg-brand hover:bg-brand/90 h-12 w-full rounded-full text-white">
+                    <Button disabled={processing} className="bg-ink text-ink-foreground hover:bg-ink/90 h-14 w-full rounded-full text-base">
+                        {processing && <LoaderCircle className="animate-spin" />}
                         Enregistrer le mot de passe
                     </Button>
-                    <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                    >
-                        <p className="text-muted-foreground text-center text-sm">Enregistré</p>
-                    </Transition>
+                    <SavedMessage show={recentlySuccessful} />
                 </form>
-            </div>
+            </SettingsCard>
         </SettingsLayout>
     );
 }

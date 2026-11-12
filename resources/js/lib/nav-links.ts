@@ -30,5 +30,9 @@ export function isActive(currentUrl: string, { href, also = [] }: NavLink) {
 
 /** Position dans le menu de la page affichée, ou -1 si elle n'en fait pas partie. */
 export function navIndexOf(currentUrl: string) {
+    // Bilan d'un jour passé (/bilan?date=…) : on y arrive depuis le suivi, c'est donc « Suivi » qui reste allumé
+    if (currentUrl.startsWith('/bilan?') && currentUrl.includes('date=')) {
+        return navLinks.findIndex((link) => link.href === '/suivi');
+    }
     return navLinks.findIndex((link) => isActive(currentUrl, link));
 }

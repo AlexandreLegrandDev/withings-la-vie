@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -22,16 +23,16 @@ class ProfileTest extends TestCase
                 ->assertSessionHasNoErrors()->assertRedirect(route($returnTo));
             $this->assertTrue($user->fresh()->kitchen_scale_connected);
             $this->get('/repas')->assertInertia(fn (Assert $page) => $page
-                ->where('kitchenScaleConnected', true));
+                ->where('auth.user.kitchen_scale_connected', true));
 
             $this->post(route('profile.kitchen-scale.disconnect'), [
                 'return_to' => $returnTo, 'user_id' => $other->id,
             ])->assertSessionHasNoErrors()->assertRedirect(route($returnTo));
             $this->assertFalse($user->fresh()->kitchen_scale_connected);
             $this->get('/profil')->assertInertia(fn (Assert $page) => $page
-                ->where('profile.kitchen_scale_connected', false));
+                ->where('auth.user.kitchen_scale_connected', false));
             $this->get('/repas')->assertInertia(fn (Assert $page) => $page
-                ->where('kitchenScaleConnected', false));
+                ->where('auth.user.kitchen_scale_connected', false));
         }
 
         $this->assertFalse($other->fresh()->kitchen_scale_connected);
@@ -62,7 +63,7 @@ class ProfileTest extends TestCase
         $user = User::factory()->create()->fresh();
         $this->assertFalse($user->kitchen_scale_connected);
         $this->actingAs($user)->get('/profil')->assertInertia(fn (Assert $page) => $page
-            ->where('profile.kitchen_scale_connected', false));
+            ->where('auth.user.kitchen_scale_connected', false));
     }
 
     public function test_connecting_a_kitchen_scale_only_updates_the_authenticated_account(): void
@@ -76,7 +77,7 @@ class ProfileTest extends TestCase
         $this->assertTrue($user->fresh()->kitchen_scale_connected);
         $this->assertFalse($other->fresh()->kitchen_scale_connected);
         $this->get('/profil')->assertInertia(fn (Assert $page) => $page
-            ->where('profile.kitchen_scale_connected', true));
+            ->where('auth.user.kitchen_scale_connected', true));
 
         $this->post(route('profile.kitchen-scale.connect'))->assertRedirect(route('profile'));
         $this->assertTrue($user->fresh()->kitchen_scale_connected);
@@ -130,7 +131,7 @@ class ProfileTest extends TestCase
 
     public function test_profile_only_shows_the_authenticated_users_weights_in_date_order(): void
     {
-        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-11-11 12:00:00', 'Europe/Paris'));
+        $this->travelTo(Carbon::parse('2026-11-11 12:00:00', 'Europe/Paris'));
         $user = User::factory()->create([
             'diet_status' => 'transition',
             'transition_started_on' => now()->subWeeks(3)->toDateString(),
@@ -154,8 +155,19 @@ class ProfileTest extends TestCase
     {
         $this->actingAs(User::factory()->create())->get('/profil')
             ->assertOk()->assertInertia(fn (Assert $page) => $page
-                ->component('profile')
-                ->where('profile.transition_days', null)
-                ->has('weights', 0));
+            ->component('profile')
+            ->where('profile.transition_days', null)
+            ->has('weights', 0));
+    }
+
+    public function test_a_new_weight_updates_the_protein_target(): void
+    {
+        $user = User::factory()->create(['protein_target_g' => 58.1, 'calcium_target_mg' => 950]);
+
+        $this->actingAs($user)->post(route('profile.weight.store'), ['weight_kg' => 80])->assertSessionHasNoErrors();
+
+        // 80 kg × 0,83 g/kg
+        $this->assertSame('66.400', $user->fresh()->protein_target_g);
+        $this->assertSame('950.000', $user->fresh()->calcium_target_mg);
     }
 }

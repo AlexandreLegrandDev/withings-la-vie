@@ -1,11 +1,20 @@
+import { Star, StatusBadge } from '@/components/meal-card';
 import MobileLayout from '@/layouts/mobile-layout';
+import { formatLongDay, formatNumber, plural } from '@/lib/format';
+import { mealLabel, type MealSummary } from '@/lib/meals';
 import { cn } from '@/lib/utils';
 import type { Intake, NutrientIntake } from '@/types';
 import { Link } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DaySummaryProps {
+    /** Jour affiché, AAAA-MM-JJ (aujourd'hui, ou un jour passé ouvert depuis la page Suivi). */
+    date: string;
+    isToday: boolean;
     /** Bilan du jour calculé par app/Services/DailyIntake.php (TodayController@summary). */
     intake: Intake;
+    /** Repas de ce jour, avec la part de la journée que chacun a apportée. */
+    meals: MealSummary[];
 }
 
 /** Titre selon le nombre d'objectifs manqués : 0 manqué → « Journée parfaite. », 1 → « Presque parfait. »… */
@@ -21,28 +30,27 @@ const headlines: [string, string][] = [
 const tips: Record<NutrientIntake['key'], string> = {
     protein: 'Pense aux protéines : des lentilles, des pois chiches, du tofu ou un yaourt.',
     iron: 'Pense au fer : des lentilles, du tofu ou des pois chiches, avec un fruit riche en vitamine C pour mieux l’absorber.',
-    b12: 'Pense à la B12 : un œuf, un yaourt, ou 80 g de jambon Équilibre La Vie.',
+    b12: 'Pense à la B12 : un œuf, un yaourt, ou 80 g de jambon végétal La Vie.',
     calcium: 'Pense au calcium : un yaourt, un morceau de fromage ou une boisson végétale enrichie.',
     zinc: 'Pense au zinc : des graines de courge, des pois chiches ou un peu de fromage.',
 };
 
-/** Badge à droite de chaque nutriment. */
-function Status({ percent }: { percent: number }) {
+/** Badge à droite de chaque nutriment. Au-delà de 100 %, on affiche le dépassement. */
+function Status({ nutrient }: { nutrient: NutrientIntake }) {
     const [label, className] =
-        percent >= 100
-            ? ['Atteint', 'bg-[#e0f5e9] text-[#3f8f63]']
-            : percent >= 50
-              ? [`Partiel · ${percent} %`, 'bg-sun text-[#8a6d00]']
-              : ['À compléter', 'bg-[#ffe0ec] text-brand'];
+        nutrient.actualPercent > 100
+            ? [`Dépassé · ${nutrient.actualPercent} %`, 'bg-rose-soft text-rose-ink']
+            : nutrient.percent >= 100
+              ? ['Atteint', 'bg-mint text-mint-ink']
+              : nutrient.percent >= 50
+                ? [`Partiel · ${nutrient.percent} %`, 'bg-sun text-sun-ink']
+                : ['À compléter', 'bg-rose-soft text-rose-ink'];
 
     return <span className={cn('shrink-0 rounded-full px-3 py-1 text-xs font-semibold', className)}>{label}</span>;
 }
 
-/** Nombre à la française, 1 décimale max : 28,5 / 230. */
-const formatNumber = (value: number) => value.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
-
-/** Page « Bilan de la journée » (/bilan), ouverte depuis la carte « Ta journée » de l'accueil. */
-export default function DaySummary({ intake }: DaySummaryProps) {
+/** Page « Bilan de la journée » (/bilan ou /bilan?date=AAAA-MM-JJ). */
+export default function DaySummary({ date, isToday, intake, meals }: DaySummaryProps) {
     const total = intake.nutrients.length;
     const reached = intake.nutrients.filter((n) => n.percent >= 100).length;
     const [first, second] = headlines[Math.min(total - reached, headlines.length - 1)];
@@ -51,58 +59,93 @@ export default function DaySummary({ intake }: DaySummaryProps) {
     const sorted = [...intake.nutrients].sort((a, b) => b.percent - a.percent);
     // Le nutriment le plus en retard, pour le conseil « Pour ton prochain repas »
     const weakest = sorted.at(-1);
+    const backHref = isToday ? route('today') : route('tracking', { date });
 
     return (
         <MobileLayout title="Bilan de la journée">
             <header className="relative">
+                {!isToday && (
+                    <Link
+                        href={backHref}
+                        aria-label="Retour au suivi"
+                        className="border-border mb-4 flex size-11 items-center justify-center rounded-full border"
+                    >
+                        <ChevronLeft className="size-5" />
+                    </Link>
+                )}
                 {/* Étoile dans un rond rose, en haut à droite */}
-                <span aria-hidden className="absolute top-0 right-0 flex size-20 items-center justify-center rounded-full bg-[#ffd9e8]">
-                    <svg viewBox="0 0 24 24" className="size-10 fill-[#ffd24d]">
-                        <path d="M12 1.5l3.1 6.9 7.4.7-5.6 5 1.6 7.4L12 17.7l-6.5 3.8 1.6-7.4-5.6-5 7.4-.7z" />
-                    </svg>
+                <span aria-hidden className="bg-rose absolute top-0 right-0 flex size-20 items-center justify-center rounded-full">
+                    <Star className="size-10" />
                 </span>
 
-                <p className="relative pt-4 text-[0.7rem] font-medium tracking-widest text-neutral-500 uppercase">Bilan de la journée</p>
+                <p className="text-muted-foreground relative pt-4 text-xs font-medium tracking-widest uppercase">
+                    {isToday ? 'Bilan de la journée' : formatLongDay(date)}
+                </p>
                 <h1 className="relative mt-1 text-[clamp(2rem,9vw,2.5rem)] leading-[1.05] font-semibold tracking-tight">
                     {first}
-                    <span className="font-display block font-normal text-[#3f8f63]">{second}</span>
+                    <span className="font-display text-mint-ink block font-normal">{second}</span>
                 </h1>
-                <p className="relative mt-1 text-sm text-neutral-600">
-                    {reached} objectif{reached > 1 ? 's' : ''} atteint{reached > 1 ? 's' : ''} sur {total}
+                <p className="text-subtle relative mt-1 text-sm">
+                    {reached} {plural(reached, 'objectif atteint', 'objectifs atteints')} sur {total}
                 </p>
             </header>
 
-            <ul className="mt-6 divide-y divide-neutral-100">
+            <ul className="divide-border mt-6 divide-y">
                 {sorted.map((nutrient) => (
                     <li key={nutrient.key} className="flex items-center justify-between gap-3 py-3">
                         <div className="min-w-0">
                             <p className="font-semibold">{nutrient.label}</p>
-                            <p className="text-xs text-neutral-500">
+                            <p className="text-muted-foreground text-sm tabular-nums">
                                 {formatNumber(nutrient.eaten)} / {formatNumber(nutrient.target)} {nutrient.unit}
                             </p>
                         </div>
-                        <Status percent={nutrient.percent} />
+                        <Status nutrient={nutrient} />
                     </li>
                 ))}
             </ul>
 
-            {weakest && weakest.percent < 100 && (
+            {isToday && weakest && weakest.percent < 100 && (
                 <section className="bg-sun mt-5 rounded-3xl p-5">
-                    <p className="text-[0.7rem] font-medium tracking-widest text-[#8a6d00] uppercase">Pour ton prochain repas</p>
+                    <p className="text-sun-ink text-xs font-medium tracking-widest uppercase">Pour ton prochain repas</p>
                     <p className="mt-2 text-lg leading-snug font-bold">{tips[weakest.key]}</p>
                 </section>
             )}
 
-            <p className="mt-5 text-xs leading-relaxed text-neutral-500">
+            <section className="mt-6">
+                <h2 className="text-base font-bold">{isToday ? 'Tes repas du jour' : 'Tes repas ce jour-là'}</h2>
+                {meals.length === 0 ? (
+                    <p className="text-muted-foreground mt-2 text-sm">Aucun repas noté.</p>
+                ) : (
+                    <ul className="mt-2 flex flex-col gap-2">
+                        {meals.map((meal) => (
+                            <li key={meal.id}>
+                                <Link
+                                    href={route('meals.show', meal.id)}
+                                    className="border-border hover:bg-muted flex items-center gap-3 rounded-2xl border px-4 py-3"
+                                >
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block font-semibold">{mealLabel(meal.type, meal.number)}</span>
+                                        <span className="text-muted-foreground block text-sm">{meal.dayPercent} % de la journée</span>
+                                    </span>
+                                    <StatusBadge status={meal.status} />
+                                    <ChevronRight className="text-faint size-4 shrink-0" />
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </section>
+
+            <p className="text-muted-foreground mt-5 text-xs leading-relaxed">
                 La B12 est quasi absente des végétaux. Ce suivi ne remplace pas un bilan sanguin : parles-en à un professionnel de santé pour savoir
                 s'il te faut un complément.
             </p>
 
             <Link
-                href={route('today')}
-                className="bg-night mt-8 flex h-14 w-full items-center justify-center rounded-full text-base font-medium text-white"
+                href={backHref}
+                className="bg-ink text-ink-foreground mt-8 flex h-14 w-full items-center justify-center rounded-full text-base font-medium"
             >
-                Retour à ma journée
+                {isToday ? 'Retour à ma journée' : 'Retour au suivi'}
             </Link>
         </MobileLayout>
     );

@@ -7,16 +7,163 @@
 
 @plugin 'tailwindcss-animate';
 
+/* Thème sombre : classe .dark sur <html>, posée par hooks/use-appearance.tsx (choix dans Paramètres → Apparence) */
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Couleurs de l'appli. Chaque couleur est une variable redéfinie en thème sombre (plus bas),
+  donc une classe comme bg-rose ou text-mint-ink reste lisible dans les deux thèmes.
+  Pas de couleur en dur (#…) dans les composants : on passe toujours par ces classes.
+*/
+@theme {
+    /* Couleurs fixes (identiques dans les deux thèmes) */
+    --color-brand: #e33d81;
+    --color-night: #1a1a1f;
+    --color-periwinkle: #7d94ec;
+    --color-gold: #f2c230;
+    --color-candy: #f57aae;
+    --color-leaf: #5dc28c;
+    --color-butter: #ffd24d;
+
+    /* Pastels des cartes et leur couleur de texte (…-ink) */
+    --color-rose: var(--rose);
+    --color-rose-soft: var(--rose-soft);
+    --color-rose-deep: var(--rose-deep);
+    --color-rose-ink: var(--rose-ink);
+    --color-mint: var(--mint);
+    --color-mint-ink: var(--mint-ink);
+    --color-sky: var(--sky);
+    --color-sky-ink: var(--sky-ink);
+    --color-sun: var(--sun);
+    --color-sun-ink: var(--sun-ink);
+    --color-lilac: var(--lilac);
+    --color-lilac-ink: var(--lilac-ink);
+
+    /* Bouton principal : foncé en thème clair, clair en thème sombre */
+    --color-ink: var(--ink);
+    --color-ink-foreground: var(--ink-foreground);
+
+    /* Textes secondaires : subtle (un peu atténué) > muted-foreground (légendes) > faint (icônes, placeholders) */
+    --color-subtle: var(--subtle);
+    --color-faint: var(--faint);
+
+    /* Police arrondie des mots mis en avant (« revoir », « compte ») : classe font-display */
+    --font-display: 'Bagel Fat One', ui-rounded, sans-serif;
+    /* Police du texte courant (par défaut partout) : classe font-sans */
+    --font-sans:
+        'Figtree Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    /* Couleurs des composants ui/ (Button, Dialog, Input…) */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--foreground);
+    --color-popover: var(--card);
+    --color-popover-foreground: var(--foreground);
+    --color-primary: var(--ink);
+    --color-primary-foreground: var(--ink-foreground);
+    --color-secondary: var(--muted);
+    --color-secondary-foreground: var(--foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--muted);
+    --color-accent-foreground: var(--foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: #ffffff;
+    --color-border: var(--border);
+    --color-input: var(--border);
+    --color-ring: var(--brand-ring);
+}
+
+:root {
+    color-scheme: light;
+    --background: #ffffff;
+    --foreground: #1a1a1f;
+    --card: #ffffff;
+    --muted: #f4f4f6;
+    --muted-foreground: #6b6b75;
+    --subtle: #4f4f58;
+    --faint: #a0a0a8;
+    --border: #e7e7eb;
+    --destructive: #dc2626;
+    --brand-ring: #e33d81;
+    --ink: #1a1a1f;
+    --ink-foreground: #ffffff;
+
+    --rose: #ffd9e8;
+    --rose-soft: #ffe8f1;
+    --rose-deep: #ffc2da;
+    --rose-ink: #a6255c;
+    --mint: #e0f5e9;
+    --mint-ink: #287354;
+    --sky: #d9ecfa;
+    --sky-ink: #315872;
+    --sun: #fff1bc;
+    --sun-ink: #6e5a12;
+    --lilac: #eee5fa;
+    --lilac-ink: #70518b;
+
+    --radius: 0.5rem;
+}
+
+.dark {
+    color-scheme: dark;
+    --background: #121216;
+    --foreground: #f2f2f5;
+    --card: #1c1c22;
+    --muted: #25252c;
+    --muted-foreground: #a3a3ad;
+    --subtle: #cacad2;
+    --faint: #73737d;
+    --border: #2f2f37;
+    --destructive: #ef4444;
+    --brand-ring: #f0579a;
+    --ink: #f2f2f5;
+    --ink-foreground: #1a1a1f;
+
+    --rose: #3a1c2a;
+    --rose-soft: #2c1821;
+    --rose-deep: #4f2539;
+    --rose-ink: #ff9cc6;
+    --mint: #17302a;
+    --mint-ink: #8adbb0;
+    --sky: #172a3b;
+    --sky-ink: #a2cdf0;
+    --sun: #342c12;
+    --sun-ink: #f3d470;
+    --lilac: #2a2238;
+    --lilac-ink: #d2b5ef;
+}
+
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-border);
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Curseur des sliders (taille, poids) */
 .measurement-slider::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 999px;
-    background: #f5a5c5;
+    background: var(--rose-deep);
 }
 
 .measurement-slider::-moz-range-track {
     height: 4px;
     border-radius: 999px;
-    background: #f5a5c5;
+    background: var(--rose-deep);
 }
 
 .measurement-slider::-webkit-slider-thumb {
@@ -27,7 +174,7 @@
     margin-top: -10px;
     border: 0;
     border-radius: 50%;
-    background: #e33d81;
+    background: var(--color-brand);
 }
 
 .measurement-slider::-moz-range-thumb {
@@ -35,170 +182,5 @@
     height: 24px;
     border: 0;
     border-radius: 50%;
-    background: #e33d81;
-}
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-
-@custom-variant dark (&:is(.dark *));
-
-@theme {
-    /* Couleurs de l'appli : utilisables en classes Tailwind (bg-brand, text-night…) */
-    /* Valeurs relevées sur les maquettes (png/img.png et png/img_1.png) */
-    --color-brand: #e33d81;
-    --color-night: #1a1a1f;
-    --color-sun: #fff1bc;
-    --color-periwinkle: #7d94ec;
-    /* Police arrondie des mots mis en avant (« revoir », « compte ») : classe font-display */
-    --font-display: 'Bagel Fat One', ui-rounded, sans-serif;
-
-    /* Police du texte courant (par défaut partout) : classe font-sans */
-    --font-sans:
-        'Figtree Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-
-    --radius-lg: var(--radius);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-sm: calc(var(--radius) - 4px);
-
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-
-    --color-card: var(--card);
-    --color-card-foreground: var(--card-foreground);
-
-    --color-popover: var(--popover);
-    --color-popover-foreground: var(--popover-foreground);
-
-    --color-primary: var(--primary);
-    --color-primary-foreground: var(--primary-foreground);
-
-    --color-secondary: var(--secondary);
-    --color-secondary-foreground: var(--secondary-foreground);
-
-    --color-muted: var(--muted);
-    --color-muted-foreground: var(--muted-foreground);
-
-    --color-accent: var(--accent);
-    --color-accent-foreground: var(--accent-foreground);
-
-    --color-destructive: var(--destructive);
-    --color-destructive-foreground: var(--destructive-foreground);
-
-    --color-border: var(--border);
-    --color-input: var(--input);
-    --color-ring: var(--ring);
-
-    --color-chart-1: var(--chart-1);
-    --color-chart-2: var(--chart-2);
-    --color-chart-3: var(--chart-3);
-    --color-chart-4: var(--chart-4);
-    --color-chart-5: var(--chart-5);
-
-    --color-sidebar: var(--sidebar-background);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-ring: var(--sidebar-ring);
-}
-
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-    *,
-    ::after,
-    ::before,
-    ::backdrop,
-    ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
-    }
-}
-
-:root {
-    --background: hsl(0, 0%, 100%);
-    --foreground: hsl(0, 0%, 3.9%);
-    --card: hsl(0, 0%, 100%);
-    --card-foreground: hsl(0, 0%, 3.9%);
-    --popover: hsl(0, 0%, 100%);
-    --popover-foreground: hsl(0, 0%, 3.9%);
-    --primary: hsl(0, 0%, 9%);
-    --primary-foreground: hsl(0, 0%, 98%);
-    --secondary: hsl(0, 0%, 96.1%);
-    --secondary-foreground: hsl(0, 0%, 9%);
-    --muted: hsl(0, 0%, 96.1%);
-    --muted-foreground: hsl(0, 0%, 45.1%);
-    --accent: hsl(0, 0%, 96.1%);
-    --accent-foreground: hsl(0, 0%, 9%);
-    --destructive: hsl(0, 84.2%, 60.2%);
-    --destructive-foreground: hsl(0, 0%, 98%);
-    --border: hsl(0, 0%, 92.8%);
-    --input: hsl(0, 0%, 89.8%);
-    --ring: hsl(0, 0%, 3.9%);
-    --chart-1: hsl(12, 76%, 61%);
-    --chart-2: hsl(173, 58%, 39%);
-    --chart-3: hsl(197, 37%, 24%);
-    --chart-4: hsl(43, 74%, 66%);
-    --chart-5: hsl(27, 87%, 67%);
-    --radius: 0.5rem;
-    --sidebar-background: hsl(0, 0%, 98%);
-    --sidebar-foreground: hsl(240, 5.3%, 30%);
-    --sidebar-primary: hsl(0, 0%, 10%);
-    --sidebar-primary-foreground: hsl(0, 0%, 98%);
-    --sidebar-accent: hsl(0, 0%, 94%);
-    --sidebar-accent-foreground: hsl(0, 0%, 30%);
-    --sidebar-border: hsl(0, 0%, 91%);
-    --sidebar-ring: hsl(217.2, 91.2%, 59.8%);
-}
-
-.dark {
-    --background: hsl(0, 0%, 3.9%);
-    --foreground: hsl(0, 0%, 98%);
-    --card: hsl(0, 0%, 3.9%);
-    --card-foreground: hsl(0, 0%, 98%);
-    --popover: hsl(0, 0%, 3.9%);
-    --popover-foreground: hsl(0, 0%, 98%);
-    --primary: hsl(0, 0%, 98%);
-    --primary-foreground: hsl(0, 0%, 9%);
-    --secondary: hsl(0, 0%, 14.9%);
-    --secondary-foreground: hsl(0, 0%, 98%);
-    --muted: hsl(0, 0%, 6.9%);
-    --muted-foreground: hsl(0, 0%, 63.9%);
-    --accent: hsl(0, 0%, 14.9%);
-    --accent-foreground: hsl(0, 0%, 98%);
-    --destructive: hsl(0, 84%, 60%);
-    --destructive-foreground: hsl(0, 0%, 98%);
-    --border: hsl(0, 0%, 14.9%);
-    --input: hsl(0, 0%, 14.9%);
-    --ring: hsl(0, 0%, 83.1%);
-    --chart-1: hsl(220, 70%, 50%);
-    --chart-2: hsl(160, 60%, 45%);
-    --chart-3: hsl(30, 80%, 55%);
-    --chart-4: hsl(280, 65%, 60%);
-    --chart-5: hsl(340, 75%, 55%);
-    --sidebar-background: hsl(0, 0%, 7%);
-    --sidebar-foreground: hsl(0, 0%, 80%);
-    --sidebar-primary: hsl(360, 100%, 100%);
-    --sidebar-primary-foreground: hsl(0, 0%, 100%);
-    --sidebar-accent: hsl(0, 0%, 15.9%);
-    --sidebar-accent-foreground: hsl(240, 4.8%, 95.9%);
-    --sidebar-border: hsl(0, 0%, 15.9%);
-    --sidebar-ring: hsl(217.2, 91.2%, 59.8%);
-}
-
-@layer base {
-    * {
-        @apply border-border;
-    }
-
-    body {
-        @apply bg-background text-foreground;
-    }
+    background: var(--color-brand);
 }

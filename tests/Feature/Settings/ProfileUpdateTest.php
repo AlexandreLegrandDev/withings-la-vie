@@ -4,6 +4,7 @@ namespace Tests\Feature\Settings;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 class ProfileUpdateTest extends TestCase
@@ -38,7 +39,7 @@ class ProfileUpdateTest extends TestCase
         $this->travel(3)->days();
         $this->patch('/settings/profile', $payload)->assertSessionHasNoErrors();
         $this->assertSame($startedOn, $user->fresh()->transition_started_on->toDateString());
-        $this->get('/profil')->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+        $this->get('/profil')->assertInertia(fn (AssertableInertia $page) => $page
             ->where('profile.transition_days', 3));
     }
 
@@ -136,5 +137,39 @@ class ProfileUpdateTest extends TestCase
             ->assertRedirect('/settings/profile');
 
         $this->assertNotNull($user->fresh());
+    }
+
+    public function test_sex_birth_date_and_height_can_be_updated_and_the_calcium_target_follows_the_age(): void
+    {
+        $this->travelTo(now()->setDate(2026, 11, 12));
+        $user = User::factory()->create(['date_of_birth' => '1990-01-01', 'calcium_target_mg' => 950, 'protein_target_g' => 50]);
+
+        $this->actingAs($user)->patch('/settings/profile', [
+            'name' => $user->name, 'email' => $user->email,
+            'sex' => 'male', 'date_of_birth' => '2004-05-01', 'height_cm' => 182,
+        ])->assertSessionHasNoErrors()->assertRedirect('/settings/profile');
+
+        $user->refresh();
+        $this->assertSame('male', $user->sex);
+        $this->assertSame('2004-05-01', $user->date_of_birth->toDateString());
+        $this->assertSame(182, $user->height_cm);
+        // 22 ans : 1000 mg de calcium ; sans pesée, les protéines ne bougent pas
+        $this->assertSame('1000.000', $user->calcium_target_mg);
+        $this->assertSame('50.000', $user->protein_target_g);
+
+        $this->get('/settings/profile')->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('settings/profile')
+            ->where('account.date_of_birth', '2004-05-01')
+            ->where('account.height_cm', 182));
+    }
+
+    public function test_invalid_profile_values_are_rejected(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->patch('/settings/profile', [
+            'name' => $user->name, 'email' => $user->email,
+            'sex' => 'other', 'date_of_birth' => now()->addDay()->toDateString(), 'height_cm' => 20,
+        ])->assertSessionHasErrors(['sex', 'date_of_birth', 'height_cm']);
     }
 }

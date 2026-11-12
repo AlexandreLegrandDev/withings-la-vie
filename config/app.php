@@ -65,7 +65,8 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
+    // Toute l'appli vit à l'heure de Paris : dates en base, « aujourd'hui », affichage.
+    'timezone' => 'Europe/Paris',
 
     /*
     |--------------------------------------------------------------------------

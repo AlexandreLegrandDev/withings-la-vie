@@ -19,15 +19,8 @@ class NavigationTest extends TestCase
     {
         $this->actingAs(User::factory()->create());
 
-        foreach (['/', '/repas', '/suivi', '/profil'] as $url) {
+        foreach (['/', '/bilan', '/repas', '/suivi', '/suivi?periode=mois', '/profil', '/settings/profile', '/settings/password', '/settings/appearance'] as $url) {
             $this->get($url)->assertOk();
         }
-    }
-
-    public function test_dashboard_redirects_to_today()
-    {
-        $this->actingAs(User::factory()->create());
-
-        $this->get('/dashboard')->assertRedirect('/');
     }
 }

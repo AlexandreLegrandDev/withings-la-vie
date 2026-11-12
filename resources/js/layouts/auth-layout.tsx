@@ -1,9 +1,10 @@
-import AuthLayoutTemplate from '@/layouts/auth/auth-simple-layout';
+import type { ReactNode } from 'react';
 
-export default function AuthLayout({ children, title, description }: { children: React.ReactNode; title?: string; description?: string }) {
+/** Cadre des pages de connexion / inscription : largeur téléphone, sans le menu du bas. */
+export default function AuthLayout({ children }: { children: ReactNode }) {
     return (
-        <AuthLayoutTemplate title={title} description={description}>
-            {children}
-        </AuthLayoutTemplate>
+        <div className="bg-background text-foreground min-h-svh">
+            <div className="mx-auto flex min-h-svh max-w-md flex-col px-6 pt-10 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">{children}</div>
+        </div>
     );
 }

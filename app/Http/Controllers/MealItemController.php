@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Meal;
 use App\Models\MealItem;
 use App\Services\FoodCatalogue;
+use App\Services\FoodSuggester;
 use App\Services\ItemNutrientCalculator;
 use App\Services\MealNutrientCalculator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,26 +23,27 @@ use Inertia\Response;
  */
 class MealItemController extends Controller
 {
-    /** Page « Choisir un aliment » pour ce repas. */
-    public function create(Request $request, Meal $meal, FoodCatalogue $catalogue): Response
+    /** Page « Choisir un aliment » pour ce repas (?aliment=clé : aliment déjà choisi, depuis une suggestion). */
+    public function create(Request $request, Meal $meal, FoodCatalogue $catalogue, FoodSuggester $suggester): Response
     {
         abort_unless($meal->user_id === $request->user()->id, 404);
 
         $foods = collect($catalogue->all())->map(fn (array $food, string $key) => [
             'key' => $key,
             'name' => $food['name'],
-            'category' => ($food['brand'] ?? null) === 'La Vie' ? 'la_vie' : 'base',
+            'category' => FoodCatalogue::isLaVie($food) ? 'la_vie' : 'base',
             'badge' => $food['brand'] ?? null,
-            'nutrients' => '',
-            'per100g' => collect(array_keys(ItemNutrientCalculator::FIELDS))
-                ->mapWithKeys(fn ($field) => [$field => $food[$field] ?? null])->all(),
+            'per100g' => FoodCatalogue::per100g($food),
+            'estimated' => FoodCatalogue::estimatedFields($food),
         ])->values();
+
+        $preselected = $request->query('aliment');
 
         return Inertia::render('meals/add-food', [
             'meal' => ['id' => $meal->id, 'type' => $meal->type],
-            // Les suggestions seront ajoutées ensuite.
-            'suggestions' => [],
+            'suggestions' => $suggester->forDay($request->user(), $meal->meal_date->toDateString()),
             'foods' => $foods,
+            'preselected' => is_string($preselected) && $catalogue->find($preselected) ? $preselected : null,
         ]);
     }
 

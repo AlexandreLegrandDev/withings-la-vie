@@ -15,11 +15,7 @@ type LoginForm = {
     remember: boolean;
 };
 
-interface LoginProps {
-    status?: string;
-}
-
-export default function Login({ status }: LoginProps) {
+export default function Login({ status }: { status?: string }) {
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({
         email: '',
         password: '',
@@ -38,18 +34,18 @@ export default function Login({ status }: LoginProps) {
         <AuthLayout>
             <Head title="Connexion" />
 
-            {/* Mascotte dans le cercle rose, avec deux étoiles jaunes */}
+            {/* Mascotte Tofu sur le blob rose, avec deux étoiles jaunes */}
             <div className="relative mx-auto w-[62%]">
-                <Sparkle className="absolute -top-2 left-0 size-5 fill-yellow-400 text-yellow-400" />
-                <Sparkle className="absolute top-2 -right-2 size-6 fill-yellow-400 text-yellow-400" />
-                <Mascot src="/image/tofou-login.png" color="bg-brand" />
+                <Sparkle className="fill-butter text-butter absolute -top-2 left-0 size-5" />
+                <Sparkle className="fill-butter text-butter absolute top-2 -right-2 size-6" />
+                <Mascot src="/image/mascotte-tofu.png" alt="Tofu, la mascotte de Veggings" color="bg-brand" />
             </div>
 
             <h1 className="mt-8 text-center text-[clamp(1.6rem,7.5vw,2rem)] font-semibold tracking-tight">
-                Content de vous <span className="font-display text-brand">revoir</span>
+                Content de te <span className="font-display text-brand font-normal">revoir</span>
             </h1>
 
-            {status && <p className="mt-4 text-center text-sm font-medium text-green-600">{status}</p>}
+            {status && <p className="text-mint-ink mt-4 text-center text-sm font-medium">{status}</p>}
 
             <form className="mt-10 flex flex-col" onSubmit={submit}>
                 <div className="grid gap-2">
@@ -64,7 +60,7 @@ export default function Login({ status }: LoginProps) {
                         autoComplete="email"
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
-                        placeholder="exemple@gmail.com"
+                        placeholder="exemple@mail.com"
                     />
                     <InputError message={errors.email} className="pl-4" />
                 </div>
@@ -79,19 +75,23 @@ export default function Login({ status }: LoginProps) {
                         autoComplete="current-password"
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
-                        placeholder="Mot de passe"
+                        placeholder="Ton mot de passe"
                     />
                     <InputError message={errors.password} className="pl-4" />
                 </div>
 
-                <Button type="submit" disabled={processing} className="bg-night hover:bg-night/90 mt-8 h-14 w-full rounded-full text-base text-white">
-                    {processing && <LoaderCircle className="size-4 animate-spin" />}
+                <Button
+                    type="submit"
+                    disabled={processing}
+                    className="bg-ink text-ink-foreground hover:bg-ink/90 mt-8 h-14 w-full rounded-full text-base"
+                >
+                    {processing && <LoaderCircle className="animate-spin" />}
                     Se connecter
                 </Button>
 
-                <p className="mt-4 text-center text-xs text-neutral-600">
-                    Vous n'avez pas de compte ?{' '}
-                    <Link href={route('register')} className="text-brand font-medium">
+                <p className="text-subtle mt-4 text-center text-sm">
+                    Pas encore de compte ?{' '}
+                    <Link href={route('register')} className="text-brand font-semibold">
                         Créer un compte
                     </Link>
                 </p>
