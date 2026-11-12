@@ -45,6 +45,9 @@ export default function Today({ date, intake, currentMeal }: TodayProps) {
             <Gap />
             <DayCard percent={intake.percent} missing={intake.missing} />
             <Gap />
+            {/* Raccourci vers le repas en cours (ou « Ajouter un repas ») : juste sous la carte du jour, avant les apports */}
+            <MealShortcut meal={currentMeal} />
+            <Gap />
 
             {/* grow-[2] : la liste des apports prend plus d'espace libre que les autres blocs, pour écarter ses barres */}
             <section className="flex max-h-[26rem] grow-[2] flex-col">
@@ -64,9 +67,6 @@ export default function Today({ date, intake, currentMeal }: TodayProps) {
 
                 <p className="text-muted-foreground mt-2 text-xs">Mesuré par Withings</p>
             </section>
-
-            <Gap />
-            <MealShortcut meal={currentMeal} />
         </MobileLayout>
     );
 }
