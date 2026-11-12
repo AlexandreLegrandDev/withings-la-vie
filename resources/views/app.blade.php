@@ -36,6 +36,7 @@
         @inertiaHead
     </head>
     <body class="bg-background text-foreground font-sans antialiased">
+        @include('partials.splash')
         @inertia
     </body>
 </html>

@@ -8,6 +8,7 @@ import { registerSW } from 'virtual:pwa-register';
 import { route as routeFn } from 'ziggy-js';
 import { initializeTheme } from './hooks/use-appearance';
 import NavLayout from './layouts/nav-layout';
+import { hideSplash } from './lib/splash';
 
 declare global {
     const route: typeof routeFn;
@@ -31,6 +32,8 @@ createInertiaApp({
         const root = createRoot(el);
 
         root.render(<App {...props} />);
+        // Écran de chargement : reste au moins 2,5 s, puis disparaît en fondu
+        hideSplash();
     },
     // Barre de chargement entre deux pages, à la couleur de l'appli
     progress: {
