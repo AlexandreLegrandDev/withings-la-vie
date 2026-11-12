@@ -1,3 +1,4 @@
+import { useGrowFrom } from '@/hooks/use-animated-value';
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
 
@@ -29,7 +30,8 @@ export function ProgressRing({
 }: ProgressRingProps) {
     const radius = 50 - strokeWidth / 2;
     const circumference = 2 * Math.PI * radius;
-    const filled = Math.min(100, Math.max(0, percent));
+    // L'anneau se remplit depuis 0 à l'ouverture de la page
+    const filled = useGrowFrom(Math.min(100, Math.max(0, percent)), 0);
 
     return (
         <div className={cn('relative shrink-0', className)} role="img" aria-label={label}>
@@ -44,7 +46,10 @@ export function ProgressRing({
                     strokeLinecap={filled > 0 && filled < 100 ? 'round' : 'butt'}
                     strokeDasharray={circumference}
                     strokeDashoffset={circumference * (1 - filled / 100)}
-                    className={cn('transition-[stroke-dashoffset] duration-700', over ? 'stroke-rose-ink' : 'stroke-brand')}
+                    className={cn(
+                        'transition-[stroke-dashoffset] duration-1000 ease-out motion-reduce:transition-none',
+                        over ? 'stroke-rose-ink' : 'stroke-brand',
+                    )}
                 />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">{children}</div>

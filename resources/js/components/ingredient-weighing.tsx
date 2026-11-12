@@ -1,3 +1,4 @@
+import { AnimatedNumber } from '@/components/animated-number';
 import { IngredientNutrients } from '@/components/ingredient-nutrients';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -71,15 +72,15 @@ export function IngredientWeighing({
                         </DialogClose>
                     </div>
 
-                    <img src="/image/Balance.svg" alt="" className="mx-auto mt-6 w-[min(72vw,300px)]" />
+                    <img src="/image/Balance.svg" alt="" className="animate-pop mx-auto mt-6 w-[min(72vw,300px)]" />
 
                     <DialogTitle className="mt-5 text-center text-lg font-semibold">{foodName}</DialogTitle>
                     <div className="mt-2 text-center" aria-live="polite">
                         <p className="text-7xl leading-tight font-semibold tracking-tight tabular-nums">
-                            {DEMO_WEIGHT_G}
+                            {open ? <AnimatedNumber value={DEMO_WEIGHT_G} duration={1400} /> : 0}
                             <span className="text-muted-foreground ml-2 text-3xl font-normal">g</span>
                         </p>
-                        <p className="text-mint-ink mt-1 text-sm font-medium">Poids stable</p>
+                        <p className="text-mint-ink animate-rise mt-1 text-sm font-medium [animation-delay:1400ms]">Poids stable</p>
                     </div>
                     <DialogDescription className="sr-only">
                         Pesée de {DEMO_WEIGHT_G} grammes. Tu peux ajouter cet aliment au repas ou saisir son poids à la main.

@@ -68,7 +68,7 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                 </Link>
             </header>
 
-            <dl className="mt-6 grid grid-cols-3 gap-2">
+            <dl className="stagger mt-6 grid grid-cols-3 gap-2">
                 {[
                     { label: 'Sexe', value: (profile.sex && sexLabels[profile.sex]) || 'Non renseigné' },
                     { label: 'Poids', value: latest ? `${number(latest.weight_kg)} kg` : 'Non renseigné' },
@@ -96,7 +96,7 @@ export default function Profile({ profile, weights }: { profile: ProfileData; we
                 <h2 id="targets-title" className="text-base font-bold">
                     Tes objectifs par jour
                 </h2>
-                <dl className="divide-border mt-1 divide-y">
+                <dl className="stagger divide-border mt-1 divide-y">
                     {targets.map(({ label, value, unit }) => (
                         <div key={label} className="flex items-center justify-between gap-4 py-2.5 text-sm">
                             <dt>{label}</dt>

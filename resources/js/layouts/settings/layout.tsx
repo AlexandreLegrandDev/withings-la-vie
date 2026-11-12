@@ -47,7 +47,7 @@ export default function SettingsLayout({ title, children }: { title: string; chi
                 ))}
             </nav>
 
-            <div className="mt-6 flex flex-col gap-4">{children}</div>
+            <div className="stagger mt-6 flex flex-col gap-4">{children}</div>
         </MobileLayout>
     );
 }

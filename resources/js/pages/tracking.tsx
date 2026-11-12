@@ -1,5 +1,7 @@
+import { AnimatedNumber } from '@/components/animated-number';
 import { Star } from '@/components/meal-card';
 import { NutrientBar } from '@/components/nutrient-bar';
+import { useGrowFrom } from '@/hooks/use-animated-value';
 import MobileLayout from '@/layouts/mobile-layout';
 import { parseDay } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -78,7 +80,7 @@ export default function Tracking({ period, start, end, previousDate, nextDate, b
             <section className="mt-5">
                 <div className="flex items-baseline justify-between">
                     <h2 className="text-base font-bold">Couverture des apports</h2>
-                    <span className="text-subtle text-sm">moy. {average ?? '–'} %</span>
+                    <span className="text-subtle text-sm">moy. {average === null ? '–' : <AnimatedNumber value={average} />} %</span>
                 </div>
                 <CoverageChart period={period} bars={bars} />
                 <p className="text-muted-foreground mt-3 text-xs leading-relaxed">
@@ -87,7 +89,7 @@ export default function Tracking({ period, start, end, previousDate, nextDate, b
                 </p>
             </section>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="stagger mt-5 grid grid-cols-2 gap-3">
                 <StreakCard streak={streak} />
                 {b12 && <B12Card percent={b12.percent} />}
             </div>
@@ -97,7 +99,7 @@ export default function Tracking({ period, start, end, previousDate, nextDate, b
                 {nutrients.length === 0 ? (
                     <p className="text-muted-foreground mt-2 text-sm">Aucun repas noté sur cette période.</p>
                 ) : (
-                    <ul className="mt-2 flex flex-col gap-3">
+                    <ul className="stagger mt-2 flex flex-col gap-3">
                         {nutrients.map((nutrient) => (
                             // Bien couvert (90 % et plus) : vert
                             <NutrientBar key={nutrient.key} label={nutrient.label} percent={nutrient.percent} goodFrom={90} />
@@ -160,9 +162,12 @@ function PeriodSwitch({ period }: { period: TrackingProps['period'] }) {
  * Un clic ouvre le bilan du jour (vue semaine) ou la semaine (vue mois).
  */
 function CoverageChart({ period, bars }: { period: TrackingProps['period']; bars: Bar[] }) {
+    // Les barres partent de 0 à l'ouverture de la page, puis montent à leur hauteur
+    const grown = useGrowFrom(true, false);
+
     return (
         <ul className="mt-3 flex gap-[3%]">
-            {bars.map((bar) => {
+            {bars.map((bar, index) => {
                 const upcoming = bar.value === null;
                 const content = (
                     <>
@@ -171,11 +176,14 @@ function CoverageChart({ period, bars }: { period: TrackingProps['period']; bars
                         <span className="mt-1 flex h-40 w-full items-end">
                             <span
                                 className={cn(
-                                    'block w-full rounded-xl transition-[height] duration-700',
+                                    'block w-full rounded-xl transition-[height] duration-700 ease-out motion-reduce:transition-none',
                                     upcoming ? 'border-border border-2 border-dashed' : bar.current ? 'bg-brand' : 'bg-rose',
                                 )}
                                 // Au moins 6 % pour qu'une barre à 0 reste visible ; jour à venir : contour en pointillé
-                                style={{ height: `${upcoming ? 100 : Math.max(6, bar.value ?? 0)}%` }}
+                                style={{
+                                    height: `${upcoming ? 100 : grown ? Math.max(6, bar.value ?? 0) : 0}%`,
+                                    transitionDelay: `${index * 60}ms`,
+                                }}
                             />
                         </span>
                         <span className={cn('text-muted-foreground mt-2 text-xs whitespace-nowrap', bar.current && 'text-foreground font-bold')}>
@@ -213,7 +221,9 @@ function StreakCard({ streak }: { streak: number }) {
     return (
         <section className="bg-mint relative rounded-3xl p-4">
             <Star className="absolute top-3 right-3 size-7" />
-            <p className="text-3xl font-semibold">{streak} j</p>
+            <p className="text-3xl font-semibold">
+                <AnimatedNumber value={streak} /> j
+            </p>
             <p className="text-mint-ink mt-2 text-sm leading-snug">{message}</p>
         </section>
     );
@@ -224,7 +234,9 @@ function B12Card({ percent }: { percent: number }) {
 
     return (
         <section className="bg-rose rounded-3xl p-4">
-            <p className="text-3xl font-semibold">{percent} %</p>
+            <p className="text-3xl font-semibold">
+                <AnimatedNumber value={percent} /> %
+            </p>
             <p className="text-rose-ink mt-2 text-sm leading-snug">de B12 en moyenne : {verdict}</p>
         </section>
     );

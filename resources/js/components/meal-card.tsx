@@ -1,3 +1,4 @@
+import { AnimatedNumber } from '@/components/animated-number';
 import { mealLabel, type MealStatus, type MealType } from '@/lib/meals';
 import { cn } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
@@ -45,7 +46,10 @@ export function MealCard({ type, number = null, status, share, dayPercent, mealI
             <span className={cn('mt-auto text-lg leading-tight font-bold', status === 'done' && 'text-subtle')}>{mealLabel(type, number)}</span>
             {dayPercent !== null && (
                 <span className={cn('text-sm', style.ink)}>
-                    <span className="font-semibold">{dayPercent} %</span> de ta journée
+                    <span className="font-semibold">
+                        <AnimatedNumber value={dayPercent} /> %
+                    </span>{' '}
+                    de ta journée
                 </span>
             )}
             <span className={cn('text-xs', style.ink)}>Prévu : {formatShare(share)}</span>

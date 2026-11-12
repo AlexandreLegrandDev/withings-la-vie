@@ -4,7 +4,9 @@ import type { ReactNode } from 'react';
 export default function AuthLayout({ children }: { children: ReactNode }) {
     return (
         <div className="bg-background text-foreground min-h-svh">
-            <div className="mx-auto flex min-h-svh max-w-md flex-col px-6 pt-10 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">{children}</div>
+            <div className="stagger mx-auto flex min-h-svh max-w-md flex-col px-6 pt-10 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
+                {children}
+            </div>
         </div>
     );
 }

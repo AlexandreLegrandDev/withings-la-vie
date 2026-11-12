@@ -90,7 +90,7 @@ export default function DaySummary({ date, isToday, intake, meals }: DaySummaryP
                 </p>
             </header>
 
-            <ul className="divide-border mt-6 divide-y">
+            <ul className="stagger divide-border mt-6 divide-y">
                 {sorted.map((nutrient) => (
                     <li key={nutrient.key} className="flex items-center justify-between gap-3 py-3">
                         <div className="min-w-0">
@@ -116,7 +116,7 @@ export default function DaySummary({ date, isToday, intake, meals }: DaySummaryP
                 {meals.length === 0 ? (
                     <p className="text-muted-foreground mt-2 text-sm">Aucun repas noté.</p>
                 ) : (
-                    <ul className="mt-2 flex flex-col gap-2">
+                    <ul className="stagger mt-2 flex flex-col gap-2">
                         {meals.map((meal) => (
                             <li key={meal.id}>
                                 <Link

@@ -31,7 +31,7 @@ export default function Meals({ meals, shares }: MealsProps) {
             </h1>
 
             {/* Chaque carte ouvre la page du repas (/repas/{id}), en le créant au premier clic */}
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="stagger mt-6 grid grid-cols-2 gap-3">
                 {cards.map((card) =>
                     'todo' in card ? (
                         <MealCard key={card.type} type={card.type} status="todo" share={shares[card.type]} dayPercent={null} mealId={null} />

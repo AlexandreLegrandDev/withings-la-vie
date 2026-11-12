@@ -102,8 +102,8 @@ export default function Register() {
                     </h1>
                     <p className="text-subtle mt-3 max-w-[15rem] text-sm">Une minute, et on t&apos;aide à composer des repas équilibrés.</p>
                 </div>
-                {/* Mascotte Bacon sur le blob jaune */}
-                <Mascot src="/image/mascotte-bacon.png" alt="Bacon, la mascotte de Veggings" color="bg-sun" className="w-[38%] shrink-0" />
+                {/* Mascotte Tofu sur le blob jaune */}
+                <Mascot src="/image/Mascotte%20tofu%20fraise.svg" alt="Tofu, la mascotte de Veggings" color="bg-sun" className="w-[38%] shrink-0" />
             </header>
 
             <form className="mt-14 flex flex-col" onSubmit={submit} noValidate={step === 1}>
@@ -111,7 +111,8 @@ export default function Register() {
                     Étape {step} sur 3
                 </p>
 
-                <fieldset disabled={processing} className="grid gap-5">
+                {/* key={step} : le bloc est recréé à chaque étape et rejoue son entrée */}
+                <fieldset key={step} disabled={processing} className="animate-rise grid gap-5">
                     <legend className="mb-6 text-lg font-semibold">{stepTitles[step]}</legend>
 
                     {step === 1 && (

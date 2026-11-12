@@ -1,3 +1,4 @@
+import { AnimatedNumber } from '@/components/animated-number';
 import { AuthInput } from '@/components/auth-input';
 import InputError from '@/components/input-error';
 import { StatusBadge } from '@/components/meal-card';
@@ -7,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import MobileLayout from '@/layouts/mobile-layout';
 import { formatLongDay, formatNumber } from '@/lib/format';
 import { mealLabel, type MealType } from '@/lib/meals';
+import { cn } from '@/lib/utils';
 import type { FoodSuggestion, MealIntake, NutrientIntake } from '@/types';
 import { Link, router, useForm } from '@inertiajs/react';
 import { Check, ChevronLeft, Leaf, Pencil, Plus, Scale, X } from 'lucide-react';
@@ -103,12 +105,15 @@ export default function MealShow({ meal, intake, dayMissing, items, suggestions 
             </div>
             <h1 className="mt-2 text-[clamp(1.75rem,8vw,2.1rem)] leading-tight font-semibold tracking-tight">{label}</h1>
             <p className="text-subtle mt-1 text-sm">
-                Ce repas couvre <span className="text-foreground font-semibold">{intake.dayPercent} %</span> de ta journée{' '}
-                <span className="text-muted-foreground">(prévu : {formatNumber(meal.share)} %)</span>
+                Ce repas couvre{' '}
+                <span className="text-foreground font-semibold">
+                    <AnimatedNumber value={intake.dayPercent} /> %
+                </span>{' '}
+                de ta journée <span className="text-muted-foreground">(prévu : {formatNumber(meal.share)} %)</span>
             </p>
 
             {/* Un anneau par nutriment : part de ce que ce repas devrait apporter (sa part prévue de la journée) */}
-            <ul className="mt-4 grid grid-cols-5 gap-2">
+            <ul className="stagger mt-4 grid grid-cols-5 gap-2">
                 {intake.nutrients.map((nutrient) => {
                     const over = nutrient.actualPercent > 100;
                     return (
@@ -143,7 +148,7 @@ export default function MealShow({ meal, intake, dayMissing, items, suggestions 
                 {items.length === 0 ? (
                     <p className="text-muted-foreground mt-2 text-sm">Aucun aliment pour l'instant.</p>
                 ) : (
-                    <ul className="mt-2 flex flex-col gap-2">
+                    <ul className="stagger mt-2 flex flex-col gap-2">
                         {items.map((item) => (
                             <PlateItem key={item.id} mealId={meal.id} item={item} editable={editable} />
                         ))}
@@ -182,7 +187,7 @@ function SuggestionsCard({ mealId, dayMissing, suggestions }: { mealId: number; 
             </div>
 
             {suggestions.length > 0 && (
-                <ul className="mt-3 flex flex-col gap-2">
+                <ul className="stagger mt-3 flex flex-col gap-2">
                     {suggestions.map((suggestion) => (
                         <li key={suggestion.key} className="bg-card flex items-center gap-3 rounded-2xl px-3 py-2.5">
                             <div className="min-w-0 flex-1">
@@ -240,7 +245,7 @@ function PlateItem({ mealId, item, editable }: { mealId: number; item: MealItem;
     );
 
     return (
-        <li className="flex items-center gap-2">
+        <li className={cn('flex items-center gap-2 transition-[opacity,transform] duration-200', removing && 'scale-95 opacity-40')}>
             {editable ? (
                 <button
                     type="button"
